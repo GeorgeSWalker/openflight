@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:openflight_mobile/core/constants/theme.dart';
-import 'package:openflight_mobile/ui/widgets/glass_container.dart';
 
-/// A frosted-glass "big number" tile for displaying a single shot metric.
+/// A flat dark bento-style tile for displaying a single shot metric.
 ///
+/// Highlighted tiles get a left accent border and a ghost icon watermark.
 /// Pass [infoText] to show a small ⓘ button that opens an explanatory dialog.
 class StatTile extends StatelessWidget {
   const StatTile({
@@ -21,7 +21,7 @@ class StatTile extends StatelessWidget {
   final String value;
   final String? unit;
 
-  /// When true, the tile uses an accent-tinted glass background and glow.
+  /// When true, draws a 4 px left accent border and a ghost icon watermark.
   final bool highlighted;
   final IconData? icon;
 
@@ -33,62 +33,84 @@ class StatTile extends StatelessWidget {
     final theme = Theme.of(context);
     final valueColor = highlighted ? AppColors.accent : AppColors.onSurface;
 
-    return GlassContainer(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: const BorderRadius.all(AppRadius.md),
+        border: Border(
+          left: highlighted
+              ? const BorderSide(color: AppColors.accent, width: 4)
+              : const BorderSide(color: AppColors.outlineVariant, width: 1),
+          top: const BorderSide(color: AppColors.outlineVariant, width: 1),
+          right: const BorderSide(color: AppColors.outlineVariant, width: 1),
+          bottom: const BorderSide(color: AppColors.outlineVariant, width: 1),
+        ),
       ),
-      backgroundColor: highlighted
-          ? AppColors.accent.withValues(alpha: 0.10)
-          : Colors.white.withValues(alpha: 0.05),
-      borderColor: highlighted
-          ? AppColors.accent.withValues(alpha: 0.40)
-          : Colors.white.withValues(alpha: 0.10),
-      borderWidth: highlighted ? 1.5 : 1.0,
-      boxShadow: highlighted
-          ? [
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.18),
-                blurRadius: 28,
-                spreadRadius: 0,
-                offset: const Offset(0, 6),
-              ),
-            ]
-          : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _LabelRow(label: label, icon: icon, infoText: infoText),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Text(
-                  value,
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    color: valueColor,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                  overflow: TextOverflow.ellipsis,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(AppRadius.md),
+        child: Stack(
+          children: [
+            // Ghost icon watermark — visible only when icon provided
+            if (icon != null)
+              Positioned(
+                right: -8,
+                bottom: -8,
+                child: Icon(
+                  icon,
+                  size: 72,
+                  color: AppColors.onSurface.withValues(alpha: 0.04),
                 ),
               ),
-              if (unit != null) ...[
-                const SizedBox(width: AppSpacing.xs),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Text(
-                    unit!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.onSurfaceMuted,
-                    ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _LabelRow(
+                    label: label,
+                    icon: icon,
+                    infoText: infoText,
                   ),
-                ),
-              ],
-            ],
-          ),
-        ],
+                  const SizedBox(height: AppSpacing.xs + 2),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          value,
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: valueColor,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (unit != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            unit!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.onSurfaceMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -148,10 +170,8 @@ class AnimatedStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
         child: StatTile(
           key: ValueKey(value),
           label: label,
@@ -197,7 +217,7 @@ class EmptyStatTile extends StatelessWidget {
 // Info button
 // ---------------------------------------------------------------------------
 
-/// A small ⓘ icon button that opens a glass dialog explaining a metric.
+/// A small ⓘ icon button that opens a dialog explaining a metric.
 class InfoButton extends StatelessWidget {
   const InfoButton({
     super.key,
@@ -227,12 +247,12 @@ class InfoButton extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: GlassContainer(
-          blur: 24,
-          backgroundColor: Colors.black.withValues(alpha: 0.55),
-          borderColor: Colors.white.withValues(alpha: 0.14),
-          borderRadius: const BorderRadius.all(AppRadius.lg),
+        backgroundColor: AppColors.surfaceContainerHigh,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadius.lg),
+          side: BorderSide(color: AppColors.outlineVariant),
+        ),
+        child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -266,7 +286,7 @@ class InfoButton extends StatelessWidget {
               Text(
                 text,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.onSurface.withValues(alpha: 0.85),
+                  color: AppColors.onSurfaceVariant,
                   height: 1.6,
                 ),
               ),

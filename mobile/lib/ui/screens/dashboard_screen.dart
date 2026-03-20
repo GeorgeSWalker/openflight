@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:openflight_mobile/bloc/shot/shot_cubit.dart';
 import 'package:openflight_mobile/bloc/target_distance/target_distance_cubit.dart';
@@ -31,42 +32,38 @@ const _infoClubSpeed =
 const _infoSpin =
     'Backspin rate in revolutions per minute. More spin creates lift and height '
     'but reduces roll — and too much spin kills distance. For driver, aim for '
-    '2,000–2,500 rpm. Irons typically produce 4,000–8,000 rpm. Very low spin '
-    'can cause the ball to "fall out of the sky" early.';
+    '2,000–2,500 rpm. Irons typically produce 4,000–8,000 rpm.';
 
 const _infoLaunchV =
     'The upward angle the ball launches from the ground, in degrees. '
-    'A higher launch angle gives more height and carry. '
     'For driver, the optimal window is roughly 10–16°. '
     'Pair this with spin: high launch + low spin = ideal driver ball flight.';
 
 const _infoLaunchH =
     'The sideways direction the ball starts, relative to your target line. '
     '0° means the ball launched dead straight. Positive = right of target, '
-    'negative = left. Compare with where the ball actually lands to understand '
-    'your curvature (draw, fade, push, pull).';
+    'negative = left. Compare with where the ball lands to understand curvature.';
 
 const _infoSmash =
     'Ball Speed ÷ Club Speed. Measures how efficiently you transferred energy '
     'from the club to the ball. The theoretical maximum for a driver is 1.50 — '
-    'anything above 1.45 is excellent. A lower number suggests off-centre '
-    'contact or a poorly fitted club.';
+    'anything above 1.45 is excellent.';
 
 const _infoDispersion =
     'A bird\'s-eye view showing where your last shots landed relative to the '
     'target flag. Tight clusters = consistent striking. Spread-out dots = '
-    'variable distance or direction. Use the slider below to set your target distance.';
+    'variable distance or direction.';
 
 const _infoTarget =
     'The distance you\'re trying to hit. Adjust the slider to match your '
     'intended carry target. The flag in the dispersion chart moves to this '
-    'distance so you can instantly see whether your shots are landing on target.';
+    'distance.';
 
 // ---------------------------------------------------------------------------
 // Screen
 // ---------------------------------------------------------------------------
 
-/// Primary stats dashboard — shows the latest shot metrics and dispersion view.
+/// Primary stats dashboard — bento grid layout with hero carry card.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -136,16 +133,28 @@ class _PortraitLayout extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _StatsGrid(shot: shot),
+            _HeroCarryCard(shot: shot),
+            const SizedBox(height: AppSpacing.sm),
+            _SecondaryGrid(shot: shot),
             const SizedBox(height: AppSpacing.md),
-            const _SectionLabel(label: 'Dispersion', infoText: _infoDispersion),
+            _SectionHeader(
+              label: 'Dispersion',
+              infoText: _infoDispersion,
+            ),
             const SizedBox(height: AppSpacing.sm),
             DispersionCanvas(
               history: history,
               targetDistanceYards: targetDistanceYards,
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             _TargetDistanceSlider(targetDistanceYards: targetDistanceYards),
+            if (history.length > 1) ...[
+              const SizedBox(height: AppSpacing.md),
+              const _SectionHeader(label: 'Recent Shots'),
+              const SizedBox(height: AppSpacing.sm),
+              _RecentShotsTable(history: history),
+            ],
+            const SizedBox(height: AppSpacing.md),
           ],
         ),
       );
@@ -175,11 +184,21 @@ class _LandscapeLayout extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _StatsGrid(shot: shot),
-                  const SizedBox(height: AppSpacing.md),
+                  _HeroCarryCard(shot: shot),
+                  const SizedBox(height: AppSpacing.sm),
+                  _SecondaryGrid(shot: shot),
+                  const SizedBox(height: AppSpacing.sm),
                   _TargetDistanceSlider(
-                      targetDistanceYards: targetDistanceYards),
+                    targetDistanceYards: targetDistanceYards,
+                  ),
+                  if (history.length > 1) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    const _SectionHeader(label: 'Recent Shots'),
+                    const SizedBox(height: AppSpacing.sm),
+                    _RecentShotsTable(history: history),
+                  ],
                 ],
               ),
             ),
@@ -192,7 +211,7 @@ class _LandscapeLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _SectionLabel(
+                  _SectionHeader(
                     label: 'Dispersion',
                     infoText: _infoDispersion,
                   ),
@@ -212,11 +231,147 @@ class _LandscapeLayout extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Stats grid
+// Hero carry card
 // ---------------------------------------------------------------------------
 
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.shot});
+/// Full-width primary card with large carry number and left accent border.
+class _HeroCarryCard extends StatelessWidget {
+  const _HeroCarryCard({required this.shot});
+
+  final ShotDataModel shot;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.all(AppRadius.md),
+        border: Border(
+          left: BorderSide(color: AppColors.accent, width: 4),
+          top: BorderSide(color: AppColors.outlineVariant, width: 1),
+          right: BorderSide(color: AppColors.outlineVariant, width: 1),
+          bottom: BorderSide(color: AppColors.outlineVariant, width: 1),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.all(AppRadius.md),
+        child: Stack(
+          children: [
+            // Ghost watermark
+            Positioned(
+              right: -12,
+              bottom: -12,
+              child: Icon(
+                Icons.flag_outlined,
+                size: 96,
+                color: AppColors.onSurface.withValues(alpha: 0.04),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.flag_outlined,
+                              size: 11,
+                              color: AppColors.onSurfaceMuted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'CARRY',
+                              style: theme.textTheme.labelSmall,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            InfoButton(
+                              title: 'Carry',
+                              text: _infoCarry,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              shot.carryYards.toStringAsFixed(0),
+                              style: theme.textTheme.displayLarge?.copyWith(
+                                color: AppColors.accent,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                'yds',
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Club badge
+                  _ClubBadge(clubId: shot.clubId),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ClubBadge extends StatelessWidget {
+  const _ClubBadge({required this.clubId});
+
+  final String clubId;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.12),
+          borderRadius: const BorderRadius.all(AppRadius.sm),
+          border: Border.all(
+            color: AppColors.accent.withValues(alpha: 0.30),
+          ),
+        ),
+        child: Text(
+          clubId,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.accent,
+          ),
+        ),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Secondary metric grid — 2×3 tiles
+// ---------------------------------------------------------------------------
+
+class _SecondaryGrid extends StatelessWidget {
+  const _SecondaryGrid({required this.shot});
 
   final ShotDataModel shot;
 
@@ -231,17 +386,6 @@ class _StatsGrid extends StatelessWidget {
           children: [
             Expanded(
               child: AnimatedStatTile(
-                label: 'Carry',
-                value: _fmt(shot.carryYards, decimals: 0),
-                unit: 'yds',
-                highlighted: true,
-                icon: Icons.flag_outlined,
-                infoText: _infoCarry,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: AnimatedStatTile(
                 label: 'Ball Speed',
                 value: _fmt(shot.ballSpeedMph),
                 unit: 'mph',
@@ -249,11 +393,7 @@ class _StatsGrid extends StatelessWidget {
                 infoText: _infoBallSpeed,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: AnimatedStatTile(
                 label: 'Club Speed',
@@ -263,7 +403,11 @@ class _StatsGrid extends StatelessWidget {
                 infoText: _infoClubSpeed,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
             Expanded(
               child: AnimatedStatTile(
                 label: 'Spin',
@@ -271,6 +415,15 @@ class _StatsGrid extends StatelessWidget {
                 unit: 'rpm',
                 icon: Icons.rotate_right_outlined,
                 infoText: _infoSpin,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: AnimatedStatTile(
+                label: 'Smash Factor',
+                value: smash != null ? smash.toStringAsFixed(2) : '—',
+                icon: Icons.bolt_outlined,
+                infoText: _infoSmash,
               ),
             ),
           ],
@@ -297,15 +450,6 @@ class _StatsGrid extends StatelessWidget {
                 infoText: _infoLaunchH,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: AnimatedStatTile(
-                label: 'Smash',
-                value: smash != null ? smash.toStringAsFixed(2) : '—',
-                icon: Icons.bolt_outlined,
-                infoText: _infoSmash,
-              ),
-            ),
           ],
         ),
       ],
@@ -326,7 +470,7 @@ class _TargetDistanceSlider extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SectionLabel(
+          _SectionHeader(
             label: 'Target: ${targetDistanceYards.toStringAsFixed(0)} yds',
             infoText: _infoTarget,
           ),
@@ -335,8 +479,6 @@ class _TargetDistanceSlider extends StatelessWidget {
             min: 50,
             max: 300,
             divisions: 50,
-            activeColor: AppColors.accent,
-            inactiveColor: AppColors.divider,
             onChanged: (v) =>
                 context.read<TargetDistanceCubit>().setDistance(v),
           ),
@@ -344,8 +486,187 @@ class _TargetDistanceSlider extends StatelessWidget {
       );
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label, this.infoText});
+// ---------------------------------------------------------------------------
+// Recent shots table
+// ---------------------------------------------------------------------------
+
+class _RecentShotsTable extends StatelessWidget {
+  const _RecentShotsTable({required this.history});
+
+  final List<ShotDataModel> history;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // Show at most the last 8 shots, newest first
+    final shots = history.take(8).toList();
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.all(AppRadius.md),
+        border: Border.fromBorderSide(
+          BorderSide(color: AppColors.outlineVariant),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header row
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    'CLB',
+                    style: theme.textTheme.labelSmall,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'CARRY',
+                    style: theme.textTheme.labelSmall,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'BALL',
+                    style: theme.textTheme.labelSmall,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'SPIN',
+                    style: theme.textTheme.labelSmall,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'SMASH',
+                    style: theme.textTheme.labelSmall,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.outlineVariant),
+          ...shots.asMap().entries.map((entry) {
+            final i = entry.key;
+            final s = entry.value;
+            final smash = s.smashFactor;
+            final isLast = i == shots.length - 1;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 36,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.12),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                          child: Text(
+                            s.clubId,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.accent,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          '${s.carryYards.toStringAsFixed(0)} yds',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.onSurface,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          '${s.ballSpeedMph.toStringAsFixed(1)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.onSurface,
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          '${s.spinRpm}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          smash != null ? smash.toStringAsFixed(2) : '—',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontFeatures: const [
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  const Divider(
+                    height: 1,
+                    color: AppColors.divider,
+                    indent: AppSpacing.md,
+                    endIndent: AppSpacing.md,
+                  ),
+              ],
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Section header
+// ---------------------------------------------------------------------------
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label, this.infoText});
 
   final String label;
   final String? infoText;

@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// OpenFlight design tokens.
+/// OpenFlight design tokens — mockup v2 palette.
 abstract final class AppColors {
-  // Base surfaces — deep navy-black for rich glassmorphism depth
-  static const background = Color(0xFF090C14);
-  static const surface = Color(0xFF0F1420);
-  static const surfaceVariant = Color(0xFF151C2C);
+  // Base surfaces
+  static const background = Color(0xFF0F1419);
+  static const surfaceContainerLowest = Color(0xFF0A0F13);
+  static const surfaceContainerLow = Color(0xFF171C21);
+  static const surfaceContainer = Color(0xFF1B2025);
+  static const surfaceContainerHigh = Color(0xFF252A30);
+  static const surfaceContainerHighest = Color(0xFF30353A);
 
-  // Accent — OpenFlight green
-  static const accent = Color(0xFF00E676);
-  static const accentDim = Color(0xFF00C853);
-  static const onAccent = Color(0xFF000000);
+  // Legacy aliases kept for backward compatibility
+  static const surface = surfaceContainerLow;
+  static const surfaceVariant = surfaceContainerHigh;
+
+  // Primary — OpenFlight green
+  static const accent = Color(0xFF66DF75);
+  static const accentDim = Color(0xFF4ABF58);
+  static const onAccent = Color(0xFF0A1A0C);
+
+  // Secondary — periwinkle blue
+  static const secondary = Color(0xFFA6C8FF);
 
   // Text
-  static const onSurface = Color(0xFFE8ECF4);
-  static const onSurfaceMuted = Color(0xFF7A8499);
+  static const onSurface = Color(0xFFE2E8E0);
+  static const onSurfaceVariant = Color(0xFFBDCAB9);
+  static const onSurfaceMuted = Color(0xFF879484);
+
+  // Borders
+  static const outlineVariant = Color(0xFF3E4A3C);
+  static const outline = Color(0xFF879484);
 
   // Semantic
   static const error = Color(0xFFFF6B81);
   static const warning = Color(0xFFFFC107);
 
   // Structural
-  static const divider = Color(0xFF1C2338);
+  static const divider = Color(0xFF252A30);
 
   // Connection status
   static const connected = accent;
@@ -41,48 +56,82 @@ abstract final class AppSpacing {
 
 abstract final class AppRadius {
   static const sm = Radius.circular(8.0);
-  static const md = Radius.circular(14.0);
-  static const lg = Radius.circular(20.0);
-  static const xl = Radius.circular(30.0);
+  static const md = Radius.circular(12.0);
+  static const lg = Radius.circular(16.0);
+  static const xl = Radius.circular(24.0);
 }
 
 ThemeData buildAppTheme() {
   final base = ThemeData.dark();
-  final textTheme = GoogleFonts.interTextTheme(base.textTheme).copyWith(
-    displayLarge: GoogleFonts.inter(
-      fontSize: 48,
+
+  // Space Grotesk for display/headline numbers, Inter for body
+  final textTheme = base.textTheme.copyWith(
+    displayLarge: GoogleFonts.spaceGrotesk(
+      fontSize: 52,
+      fontWeight: FontWeight.w800,
+      color: AppColors.onSurface,
+      letterSpacing: -2.5,
+      height: 1.0,
+    ),
+    displayMedium: GoogleFonts.spaceGrotesk(
+      fontSize: 36,
       fontWeight: FontWeight.w700,
       color: AppColors.onSurface,
-      letterSpacing: -2.0,
+      letterSpacing: -1.5,
+      height: 1.0,
     ),
-    displayMedium: GoogleFonts.inter(
-      fontSize: 34,
-      fontWeight: FontWeight.w600,
+    displaySmall: GoogleFonts.spaceGrotesk(
+      fontSize: 28,
+      fontWeight: FontWeight.w700,
       color: AppColors.onSurface,
       letterSpacing: -1.0,
     ),
-    titleLarge: GoogleFonts.inter(
-      fontSize: 20,
+    titleLarge: GoogleFonts.spaceGrotesk(
+      fontSize: 18,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurface,
       letterSpacing: -0.3,
     ),
     titleMedium: GoogleFonts.inter(
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: FontWeight.w500,
       color: AppColors.onSurface,
     ),
+    bodyLarge: GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w400,
+      color: AppColors.onSurface,
+      height: 1.5,
+    ),
     bodyMedium: GoogleFonts.inter(
-      fontSize: 14,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      color: AppColors.onSurfaceVariant,
+      height: 1.5,
+    ),
+    bodySmall: GoogleFonts.inter(
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       color: AppColors.onSurfaceMuted,
-      height: 1.5,
+      height: 1.4,
+    ),
+    labelLarge: GoogleFonts.inter(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: AppColors.onSurface,
+      letterSpacing: 0.1,
+    ),
+    labelMedium: GoogleFonts.inter(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: AppColors.onSurfaceMuted,
+      letterSpacing: 0.8,
     ),
     labelSmall: GoogleFonts.inter(
       fontSize: 10,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurfaceMuted,
-      letterSpacing: 1.0,
+      letterSpacing: 1.2,
     ),
   );
 
@@ -90,22 +139,24 @@ ThemeData buildAppTheme() {
     colorScheme: const ColorScheme.dark(
       primary: AppColors.accent,
       onPrimary: AppColors.onAccent,
-      secondary: AppColors.accentDim,
-      surface: AppColors.surface,
+      secondary: AppColors.secondary,
+      surface: AppColors.surfaceContainerLow,
       onSurface: AppColors.onSurface,
+      surfaceContainerLow: AppColors.surfaceContainerLow,
+      surfaceContainer: AppColors.surfaceContainer,
+      surfaceContainerHigh: AppColors.surfaceContainerHigh,
+      outline: AppColors.outline,
+      outlineVariant: AppColors.outlineVariant,
       error: AppColors.error,
     ),
     scaffoldBackgroundColor: AppColors.background,
     textTheme: textTheme,
     cardTheme: CardThemeData(
-      color: AppColors.surface,
+      color: AppColors.surfaceContainerLow,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: const BorderRadius.all(AppRadius.md),
-        side: BorderSide(
-          color: Colors.white.withValues(alpha: 0.08),
-          width: 1,
-        ),
+        side: const BorderSide(color: AppColors.outlineVariant, width: 1),
       ),
     ),
     appBarTheme: AppBarTheme(
@@ -118,7 +169,7 @@ ThemeData buildAppTheme() {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: AppColors.accent.withValues(alpha: 0.18),
+      indicatorColor: AppColors.accent.withValues(alpha: 0.15),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return GoogleFonts.inter(
@@ -130,7 +181,7 @@ ThemeData buildAppTheme() {
     ),
     sliderTheme: SliderThemeData(
       activeTrackColor: AppColors.accent,
-      inactiveTrackColor: Colors.white.withValues(alpha: 0.10),
+      inactiveTrackColor: AppColors.surfaceContainerHigh,
       thumbColor: AppColors.accent,
       overlayColor: AppColors.accent.withValues(alpha: 0.12),
       trackHeight: 2,
@@ -139,6 +190,19 @@ ThemeData buildAppTheme() {
     iconTheme: const IconThemeData(color: AppColors.onSurfaceMuted),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surfaceContainerHigh,
+      labelStyle: const TextStyle(color: AppColors.onSurfaceMuted),
+      enabledBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: AppColors.outlineVariant),
+        borderRadius: BorderRadius.all(AppRadius.sm),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: AppColors.accent),
+        borderRadius: BorderRadius.all(AppRadius.sm),
+      ),
     ),
   );
 }

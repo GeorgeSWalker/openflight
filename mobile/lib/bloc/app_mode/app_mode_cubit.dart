@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum AppMode { dashboard, simulator }
+enum AppMode { dashboard, simulator, compare, history, device }
 
 /// Controls which primary screen is visible.
 class AppModeCubit extends Cubit<AppMode> {

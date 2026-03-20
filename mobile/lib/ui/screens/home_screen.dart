@@ -2,115 +2,49 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:openflight_mobile/bloc/app_mode/app_mode_cubit.dart';
 import 'package:openflight_mobile/bloc/connection/connection_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
+import 'package:openflight_mobile/core/models/connection_state_model.dart';
+import 'package:openflight_mobile/ui/screens/compare_screen.dart';
 import 'package:openflight_mobile/ui/screens/dashboard_screen.dart';
+import 'package:openflight_mobile/ui/screens/device_screen.dart';
+import 'package:openflight_mobile/ui/screens/history_screen.dart';
 import 'package:openflight_mobile/ui/screens/simulator_screen.dart';
 import 'package:openflight_mobile/ui/widgets/club_picker.dart';
-import 'package:openflight_mobile/ui/widgets/connection_indicator.dart';
-import 'package:openflight_mobile/ui/widgets/glass_container.dart';
 
-/// Root scaffold with gradient background, glassmorphism chrome, bottom nav,
-/// and Club Picker.
+/// Root scaffold — flat dark chrome with 5-tab navigation.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) =>
       BlocBuilder<AppModeCubit, AppMode>(
-        builder: (context, mode) => Container(
-          // Rich gradient that the glass layers blur against
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF0A1020), Color(0xFF070A12)],
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
+        builder: (context, mode) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: const _OpenFlightAppBar(),
+          body: Column(
             children: [
-              // Decorative colour blobs — give BackdropFilter something to blur
-              const _BackgroundBlobs(),
-              // Transparent scaffold sits on top of the gradient
-              Scaffold(
-                backgroundColor: Colors.transparent,
-                appBar: const _OpenFlightAppBar(),
-                body: Column(
-                  children: [
-                    const ClubPicker(),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        child: switch (mode) {
-                          AppMode.dashboard => const DashboardScreen(),
-                          AppMode.simulator => const SimulatorScreen(),
-                        },
-                      ),
-                    ),
-                  ],
+              // Club picker only shown on dashboard + simulator tabs
+              if (mode == AppMode.dashboard || mode == AppMode.simulator)
+                const ClubPicker(),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: switch (mode) {
+                    AppMode.dashboard => const DashboardScreen(),
+                    AppMode.simulator => const SimulatorScreen(),
+                    AppMode.compare => const CompareScreen(),
+                    AppMode.history => const HistoryScreen(),
+                    AppMode.device => const DeviceScreen(),
+                  },
                 ),
-                bottomNavigationBar: _GlassBottomNav(currentMode: mode),
               ),
             ],
           ),
-        ),
-      );
-}
-
-// ---------------------------------------------------------------------------
-// Background decoration
-// ---------------------------------------------------------------------------
-
-class _BackgroundBlobs extends StatelessWidget {
-  const _BackgroundBlobs();
-
-  @override
-  Widget build(BuildContext context) => IgnorePointer(
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Top-left green glow
-            Positioned(
-              top: -90,
-              left: -70,
-              child: _Blob(
-                size: 420,
-                color: AppColors.accent.withValues(alpha: 0.055),
-              ),
-            ),
-            // Bottom-right cyan glow
-            Positioned(
-              bottom: -130,
-              right: -90,
-              child: _Blob(
-                size: 460,
-                color: const Color(0xFF00B4D8).withValues(alpha: 0.038),
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
-class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, Colors.transparent],
-            radius: 0.65,
-          ),
+          bottomNavigationBar: _GlassBottomNav(currentMode: mode),
         ),
       );
 }
@@ -128,11 +62,9 @@ class _OpenFlightAppBar extends StatelessWidget implements PreferredSizeWidget {
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+              color: AppColors.surfaceContainerLowest.withValues(alpha: 0.85),
+              border: const Border(
+                bottom: BorderSide(color: AppColors.outlineVariant, width: 1),
               ),
             ),
             child: AppBar(
@@ -144,15 +76,18 @@ class _OpenFlightAppBar extends StatelessWidget implements PreferredSizeWidget {
                   _AppLogo(),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'OpenFlight',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    'OPENFLIGHT',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurface,
+                      letterSpacing: 2.0,
+                    ),
                   ),
                 ],
               ),
               actions: const [
-                ConnectionIndicator(),
-                SizedBox(width: AppSpacing.md),
-                _SettingsButton(),
+                _ConnectionPill(),
                 SizedBox(width: AppSpacing.sm),
               ],
             ),
@@ -161,25 +96,22 @@ class _OpenFlightAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
 
   static Widget _AppLogo() => Container(
-        width: 30,
-        height: 30,
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF34D399), AppColors.accent],
+          color: AppColors.accent.withValues(alpha: 0.15),
+          border: Border.all(
+            color: AppColors.accent.withValues(alpha: 0.40),
+            width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.accent.withValues(alpha: 0.40),
-              blurRadius: 12,
-              spreadRadius: 0,
-            ),
-          ],
         ),
         child: const Center(
-          child: Icon(Icons.sports_golf, size: 16, color: AppColors.onAccent),
+          child: Icon(
+            Icons.sensors,
+            size: 14,
+            color: AppColors.accent,
+          ),
         ),
       );
 
@@ -188,17 +120,62 @@ class _OpenFlightAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Settings button + connection sheet
+// Connection pill
 // ---------------------------------------------------------------------------
 
-class _SettingsButton extends StatelessWidget {
-  const _SettingsButton();
+class _ConnectionPill extends StatelessWidget {
+  const _ConnectionPill();
 
   @override
-  Widget build(BuildContext context) => IconButton(
-        icon: const Icon(Icons.settings_outlined),
-        tooltip: 'Connection settings',
-        onPressed: () => _showConnectionSheet(context),
+  Widget build(BuildContext context) =>
+      BlocBuilder<ConnectionCubit, ConnectionStateModel>(
+        builder: (_, state) {
+          final (label, color) = switch (state.status) {
+            ConnectionStatus.connected => (
+                state.lastPingMs != null
+                    ? '${state.lastPingMs}ms'
+                    : 'Connected',
+                AppColors.accent,
+              ),
+            ConnectionStatus.connecting => ('Connecting', AppColors.warning),
+            ConnectionStatus.disconnected => ('No Signal', AppColors.error),
+            ConnectionStatus.error => ('Error', AppColors.error),
+          };
+
+          return GestureDetector(
+            onTap: () => _showConnectionSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _PulseDot(color: color),
+                  const SizedBox(width: 5),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
 
   static void _showConnectionSheet(BuildContext context) =>
@@ -207,31 +184,73 @@ class _SettingsButton extends StatelessWidget {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (sheetCtx) => ClipRRect(
-          borderRadius:
-              const BorderRadius.vertical(top: AppRadius.lg),
+          borderRadius: const BorderRadius.vertical(top: AppRadius.lg),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.68),
+                color: AppColors.surfaceContainerHigh.withValues(alpha: 0.95),
                 borderRadius:
                     const BorderRadius.vertical(top: AppRadius.lg),
-                border: Border(
-                  top: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
-                  left: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
-                  right: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.06),
-                  ),
+                border: const Border(
+                  top: BorderSide(color: AppColors.outlineVariant),
+                  left: BorderSide(color: AppColors.outlineVariant),
+                  right: BorderSide(color: AppColors.outlineVariant),
                 ),
               ),
               child: BlocProvider.value(
                 value: context.read<ConnectionCubit>(),
                 child: const _ConnectionSettingsSheet(),
               ),
+            ),
+          ),
+        ),
+      );
+}
+
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color});
+
+  final Color color;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _scale = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _scale,
+        builder: (_, __) => Transform.scale(
+          scale: _scale.value,
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: widget.color,
+              shape: BoxShape.circle,
             ),
           ),
         ),
@@ -252,8 +271,7 @@ class _ConnectionSettingsSheet extends StatefulWidget {
 
 class _ConnectionSettingsSheetState
     extends State<_ConnectionSettingsSheet> {
-  final _hostController =
-      TextEditingController(text: '192.168.1.100');
+  final _hostController = TextEditingController(text: '192.168.1.100');
   final _portController = TextEditingController(text: '50051');
 
   @override
@@ -277,14 +295,14 @@ class _ConnectionSettingsSheetState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Sheet handle
+              // Drag handle
               Center(
                 child: Container(
                   width: 36,
                   height: 4,
                   margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: AppColors.outlineVariant,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -297,7 +315,7 @@ class _ConnectionSettingsSheetState
               TextField(
                 controller: _hostController,
                 style: const TextStyle(color: AppColors.onSurface),
-                decoration: _inputDecoration('Raspberry Pi IP'),
+                decoration: const InputDecoration(labelText: 'Raspberry Pi IP'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
               ),
@@ -305,7 +323,7 @@ class _ConnectionSettingsSheetState
               TextField(
                 controller: _portController,
                 style: const TextStyle(color: AppColors.onSurface),
-                decoration: _inputDecoration('gRPC Port'),
+                decoration: const InputDecoration(labelText: 'gRPC Port'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -337,22 +355,6 @@ class _ConnectionSettingsSheetState
         ),
       );
 
-  static InputDecoration _inputDecoration(String label) => InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: AppColors.onSurfaceMuted),
-        enabledBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-          borderRadius: const BorderRadius.all(AppRadius.sm),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: AppColors.accent),
-          borderRadius: BorderRadius.all(AppRadius.sm),
-        ),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.07),
-      );
-
   Future<void> _connect() async {
     final host = _hostController.text.trim();
     final port = int.tryParse(_portController.text.trim()) ?? 50051;
@@ -368,7 +370,7 @@ class _ConnectionSettingsSheetState
 }
 
 // ---------------------------------------------------------------------------
-// Bottom navigation bar
+// Bottom navigation bar — glass blur retained
 // ---------------------------------------------------------------------------
 
 class _GlassBottomNav extends StatelessWidget {
@@ -382,11 +384,9 @@ class _GlassBottomNav extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.35),
-              border: Border(
-                top: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+              color: AppColors.surfaceContainerLowest.withValues(alpha: 0.90),
+              border: const Border(
+                top: BorderSide(color: AppColors.outlineVariant, width: 1),
               ),
             ),
             child: NavigationBar(
@@ -395,31 +395,47 @@ class _GlassBottomNav extends StatelessWidget {
               elevation: 0,
               selectedIndex: currentMode.index,
               onDestinationSelected: (i) =>
-                  context
-                      .read<AppModeCubit>()
-                      .switchTo(AppMode.values[i]),
-              destinations: [
+                  context.read<AppModeCubit>().switchTo(AppMode.values[i]),
+              destinations: const [
                 NavigationDestination(
-                  icon: Icon(
-                    Icons.dashboard_outlined,
-                    color: AppColors.onSurfaceMuted,
-                  ),
-                  selectedIcon: const Icon(
+                  icon: Icon(Icons.dashboard_outlined),
+                  selectedIcon: Icon(
                     Icons.dashboard_rounded,
                     color: AppColors.accent,
                   ),
-                  label: 'Dashboard',
+                  label: 'Dash',
                 ),
                 NavigationDestination(
-                  icon: Icon(
-                    Icons.view_in_ar_outlined,
-                    color: AppColors.onSurfaceMuted,
-                  ),
-                  selectedIcon: const Icon(
+                  icon: Icon(Icons.view_in_ar_outlined),
+                  selectedIcon: Icon(
                     Icons.view_in_ar,
                     color: AppColors.accent,
                   ),
-                  label: 'Simulator',
+                  label: 'Range',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  selectedIcon: Icon(
+                    Icons.bar_chart_rounded,
+                    color: AppColors.accent,
+                  ),
+                  label: 'Compare',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.history_outlined),
+                  selectedIcon: Icon(
+                    Icons.history_rounded,
+                    color: AppColors.accent,
+                  ),
+                  label: 'History',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.sensors_outlined),
+                  selectedIcon: Icon(
+                    Icons.sensors,
+                    color: AppColors.accent,
+                  ),
+                  label: 'Device',
                 ),
               ],
             ),

@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:openflight_mobile/bloc/club/club_cubit.dart';
 import 'package:openflight_mobile/bloc/target_distance/target_distance_cubit.dart';
@@ -36,15 +37,16 @@ class _ClubPickerState extends State<ClubPicker> {
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                border: Border(
+                color: AppColors.surfaceContainerLowest.withValues(alpha: 0.85),
+                border: const Border(
                   bottom: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.07),
+                    color: AppColors.outlineVariant,
+                    width: 1,
                   ),
                 ),
               ),
               child: SizedBox(
-                height: 54,
+                height: 52,
                 child: ListView.separated(
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
@@ -95,40 +97,28 @@ class _ClubChip extends StatelessWidget {
           curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: 6,
+            vertical: 5,
           ),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.accent
-                : Colors.white.withValues(alpha: 0.07),
-            borderRadius: const BorderRadius.all(AppRadius.xl),
+                ? AppColors.accent.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: const BorderRadius.all(AppRadius.sm),
             border: Border.all(
               color: isSelected
-                  ? AppColors.accent
-                  : Colors.white.withValues(alpha: 0.14),
-              width: isSelected ? 0 : 1,
+                  ? AppColors.accent.withValues(alpha: 0.50)
+                  : AppColors.outlineVariant,
+              width: 1,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.accent.withValues(alpha: 0.38),
-                      blurRadius: 14,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
           ),
           child: Text(
             clubId,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 13,
-                  color: isSelected
-                      ? AppColors.onAccent
-                      : AppColors.onSurface,
-                  fontWeight:
-                      isSelected ? FontWeight.w700 : FontWeight.w500,
-                ),
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? AppColors.accent : AppColors.onSurfaceMuted,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       );

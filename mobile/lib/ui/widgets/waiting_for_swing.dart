@@ -105,9 +105,7 @@ class _WaitingForSwingState extends State<WaitingForSwing>
           const SizedBox(height: AppSpacing.xl),
           Text(
             'Ready to Track',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.onSurface,
-            ),
+            style: theme.textTheme.titleLarge,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
