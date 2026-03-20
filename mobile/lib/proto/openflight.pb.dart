@@ -1,354 +1,265 @@
-// This file is hand-scaffolded from proto/openflight.proto.
-// Re-generate with:
+// Hand-crafted protobuf wire-format message classes for openflight.proto.
+//
+// Uses binary protobuf wire format (wire-compatible with standard protoc output)
+// implemented in pure Dart — no dependency on the 'protobuf' package.
+//
+// Re-generate from proto/openflight.proto with:
 //   dart pub global activate protoc_plugin
 //   protoc --dart_out=grpc:lib/proto -Iproto proto/openflight.proto
+//   (then remove this file and use the generated one instead)
 //
-// ignore_for_file: annotate_overrides, camel_case_types
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unused_import
+// ignore_for_file: constant_identifier_names
 
-library;
+import 'dart:convert' show utf8;
+import 'dart:typed_data';
 
-import 'dart:core' as $core;
-import 'package:protobuf/protobuf.dart' as $pb;
+// ---------------------------------------------------------------------------
+// Wire-format encode helpers
+// ---------------------------------------------------------------------------
 
-class Empty extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-    _omitMessageNames ? '' : 'Empty',
-    package: const $pb.PackageName(_omitMessageNames ? '' : 'openflight'),
-    createEmptyInstance: create,
-  )..hasRequiredFields = false;
-
-  Empty._() : super();
-  factory Empty() => create();
-  factory Empty.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Empty.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static Empty? _defaultInstance;
-
-  static Empty create() => Empty._();
-  @$core.Deprecated('Using this can add significant overhead to your binary.')
-  static Empty getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Empty clone(Empty v) => v.deepCopy();
-  @$core.override
-  Empty deepCopy() => clone(this);
-  @$core.override
-  Empty createEmptyInstance() => create();
-  @$core.override
-  $pb.PbList<Empty> createRepeated() => $pb.PbList<Empty>();
-  @$core.pragma('dart2js:noInline')
-  static Empty getDefault2() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Empty>(create);
+List<int> _varint(int value) {
+  final out = <int>[];
+  var v = value;
+  do {
+    var byte = v & 0x7F;
+    v >>>= 7;
+    if (v != 0) byte |= 0x80;
+    out.add(byte);
+  } while (v != 0);
+  return out;
 }
 
-class ShotData extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-    _omitMessageNames ? '' : 'ShotData',
-    package: const $pb.PackageName(_omitMessageNames ? '' : 'openflight'),
-    createEmptyInstance: create,
-  )
-    ..a<$core.double>(1, _omitFieldNames ? '' : 'ballSpeedMph',
-        $pb.PbFieldType.OF)
-    ..a<$core.double>(2, _omitFieldNames ? '' : 'clubSpeedMph',
-        $pb.PbFieldType.OF)
-    ..a<$core.double>(3, _omitFieldNames ? '' : 'launchAngleV',
-        $pb.PbFieldType.OF)
-    ..a<$core.double>(4, _omitFieldNames ? '' : 'launchAngleH',
-        $pb.PbFieldType.OF)
-    ..a<$core.int>(5, _omitFieldNames ? '' : 'spinRpm', $pb.PbFieldType.O3)
-    ..a<$core.double>(6, _omitFieldNames ? '' : 'carryYards',
-        $pb.PbFieldType.OF)
-    ..aOS(7, _omitFieldNames ? '' : 'clubId')
-    ..aInt64(8, _omitFieldNames ? '' : 'timestamp')
-    ..hasRequiredFields = false;
-
-  ShotData._() : super();
-  factory ShotData({
-    $core.double? ballSpeedMph,
-    $core.double? clubSpeedMph,
-    $core.double? launchAngleV,
-    $core.double? launchAngleH,
-    $core.int? spinRpm,
-    $core.double? carryYards,
-    $core.String? clubId,
-    $core.int? timestamp,
-  }) {
-    final result = create();
-    if (ballSpeedMph != null) result.ballSpeedMph = ballSpeedMph;
-    if (clubSpeedMph != null) result.clubSpeedMph = clubSpeedMph;
-    if (launchAngleV != null) result.launchAngleV = launchAngleV;
-    if (launchAngleH != null) result.launchAngleH = launchAngleH;
-    if (spinRpm != null) result.spinRpm = spinRpm;
-    if (carryYards != null) result.carryYards = carryYards;
-    if (clubId != null) result.clubId = clubId;
-    if (timestamp != null) result.timestamp = timestamp;
-    return result;
-  }
-
-  factory ShotData.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ShotData.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static ShotData? _defaultInstance;
-
-  @$core.Deprecated('Using this can add significant overhead to your binary.')
-  static ShotData getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ShotData>(create);
-
-  static ShotData create() => ShotData._();
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ShotData clone(ShotData v) => v.deepCopy();
-  @$core.override
-  ShotData deepCopy() => clone(this);
-  @$core.override
-  ShotData createEmptyInstance() => create();
-  @$core.override
-  $pb.PbList<ShotData> createRepeated() => $pb.PbList<ShotData>();
-  @$core.pragma('dart2js:noInline')
-  static ShotData getDefault2() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ShotData>(create);
-
-  @$core.pragma('dart2js:noInline')
-  static ShotData _defaultFactory() => ShotData._();
-
-  $core.double get ballSpeedMph => $_getN(0);
-  set ballSpeedMph($core.double v) {
-    $_setFloat(0, v);
-  }
-
-  $core.bool hasBallSpeedMph() => $_has(0);
-  void clearBallSpeedMph() => $_clearField(1);
-
-  $core.double get clubSpeedMph => $_getN(1);
-  set clubSpeedMph($core.double v) {
-    $_setFloat(1, v);
-  }
-
-  $core.bool hasClubSpeedMph() => $_has(1);
-  void clearClubSpeedMph() => $_clearField(2);
-
-  $core.double get launchAngleV => $_getN(2);
-  set launchAngleV($core.double v) {
-    $_setFloat(2, v);
-  }
-
-  $core.bool hasLaunchAngleV() => $_has(2);
-  void clearLaunchAngleV() => $_clearField(3);
-
-  $core.double get launchAngleH => $_getN(3);
-  set launchAngleH($core.double v) {
-    $_setFloat(3, v);
-  }
-
-  $core.bool hasLaunchAngleH() => $_has(3);
-  void clearLaunchAngleH() => $_clearField(4);
-
-  $core.int get spinRpm => $_getIZ(4);
-  set spinRpm($core.int v) {
-    $_setSignedInt32(4, v);
-  }
-
-  $core.bool hasSpinRpm() => $_has(4);
-  void clearSpinRpm() => $_clearField(5);
-
-  $core.double get carryYards => $_getN(5);
-  set carryYards($core.double v) {
-    $_setFloat(5, v);
-  }
-
-  $core.bool hasCarryYards() => $_has(5);
-  void clearCarryYards() => $_clearField(6);
-
-  $core.String get clubId => $_getSZ(6);
-  set clubId($core.String v) {
-    $_setString(6, v);
-  }
-
-  $core.bool hasClubId() => $_has(6);
-  void clearClubId() => $_clearField(7);
-
-  $core.int get timestamp => $_getIZ(7);
-  set timestamp($core.int v) {
-    $_setInt64(7, v);
-  }
-
-  $core.bool hasTimestamp() => $_has(7);
-  void clearTimestamp() => $_clearField(8);
+List<int> _fieldFloat(int fieldNum, double v) {
+  final bd = ByteData(4)..setFloat32(0, v, Endian.little);
+  return [..._varint((fieldNum << 3) | 5), ...bd.buffer.asUint8List()];
 }
 
-class UserConfig extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-    _omitMessageNames ? '' : 'UserConfig',
-    package: const $pb.PackageName(_omitMessageNames ? '' : 'openflight'),
-    createEmptyInstance: create,
-  )
-    ..aOS(1, _omitFieldNames ? '' : 'currentClub')
-    ..a<$core.double>(2, _omitFieldNames ? '' : 'targetDistanceYards',
-        $pb.PbFieldType.OF)
-    ..hasRequiredFields = false;
+List<int> _fieldVarint(int fieldNum, int v) =>
+    [..._varint((fieldNum << 3) | 0), ..._varint(v)];
 
-  UserConfig._() : super();
-  factory UserConfig({
-    $core.String? currentClub,
-    $core.double? targetDistanceYards,
-  }) {
-    final result = create();
-    if (currentClub != null) result.currentClub = currentClub;
-    if (targetDistanceYards != null) {
-      result.targetDistanceYards = targetDistanceYards;
+List<int> _fieldBool(int fieldNum, bool v) => _fieldVarint(fieldNum, v ? 1 : 0);
+
+List<int> _fieldString(int fieldNum, String v) {
+  final bytes = utf8.encode(v);
+  return [
+    ..._varint((fieldNum << 3) | 2),
+    ..._varint(bytes.length),
+    ...bytes,
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Wire-format decode helpers
+// ---------------------------------------------------------------------------
+
+(int, int) _readVarint(Uint8List buf, int pos) {
+  int result = 0, shift = 0;
+  while (true) {
+    final b = buf[pos++];
+    result |= (b & 0x7F) << shift;
+    if ((b & 0x80) == 0) return (result, pos);
+    shift += 7;
+  }
+}
+
+double _readFloat(Uint8List buf, int pos) =>
+    ByteData.sublistView(buf, pos, pos + 4).getFloat32(0, Endian.little);
+
+String _readString(Uint8List buf, int pos, int length) =>
+    utf8.decode(buf.sublist(pos, pos + length));
+
+Uint8List _toUint8(List<int> data) =>
+    data is Uint8List ? data : Uint8List.fromList(data);
+
+// ---------------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------------
+
+class Empty {
+  Empty();
+
+  Uint8List writeToBuffer() => Uint8List(0);
+
+  static Empty fromBuffer(List<int> data) => Empty();
+}
+
+class ShotData {
+  double ballSpeedMph;
+  double clubSpeedMph;
+  double launchAngleV;
+  double launchAngleH;
+  int spinRpm;
+  double carryYards;
+  String clubId;
+  int timestamp;
+
+  ShotData({
+    this.ballSpeedMph = 0.0,
+    this.clubSpeedMph = 0.0,
+    this.launchAngleV = 0.0,
+    this.launchAngleH = 0.0,
+    this.spinRpm = 0,
+    this.carryYards = 0.0,
+    this.clubId = '',
+    this.timestamp = 0,
+  });
+
+  Uint8List writeToBuffer() {
+    final out = <int>[];
+    if (ballSpeedMph != 0.0) out.addAll(_fieldFloat(1, ballSpeedMph));
+    if (clubSpeedMph != 0.0) out.addAll(_fieldFloat(2, clubSpeedMph));
+    if (launchAngleV != 0.0) out.addAll(_fieldFloat(3, launchAngleV));
+    if (launchAngleH != 0.0) out.addAll(_fieldFloat(4, launchAngleH));
+    if (spinRpm != 0) out.addAll(_fieldVarint(5, spinRpm));
+    if (carryYards != 0.0) out.addAll(_fieldFloat(6, carryYards));
+    if (clubId.isNotEmpty) out.addAll(_fieldString(7, clubId));
+    if (timestamp != 0) out.addAll(_fieldVarint(8, timestamp));
+    return Uint8List.fromList(out);
+  }
+
+  static ShotData fromBuffer(List<int> data) {
+    final msg = ShotData();
+    final buf = _toUint8(data);
+    var pos = 0;
+    while (pos < buf.length) {
+      final (tag, p1) = _readVarint(buf, pos);
+      pos = p1;
+      final fn = tag >> 3;
+      final wt = tag & 0x7;
+      if (wt == 5) {
+        // 32-bit float
+        final v = _readFloat(buf, pos);
+        pos += 4;
+        if (fn == 1) msg.ballSpeedMph = v;
+        if (fn == 2) msg.clubSpeedMph = v;
+        if (fn == 3) msg.launchAngleV = v;
+        if (fn == 4) msg.launchAngleH = v;
+        if (fn == 6) msg.carryYards = v;
+      } else if (wt == 0) {
+        // varint
+        final (v, p2) = _readVarint(buf, pos);
+        pos = p2;
+        if (fn == 5) msg.spinRpm = v;
+        if (fn == 8) msg.timestamp = v;
+      } else if (wt == 2) {
+        // length-delimited
+        final (length, p2) = _readVarint(buf, pos);
+        pos = p2;
+        if (fn == 7) msg.clubId = _readString(buf, pos, length);
+        pos += length;
+      } else {
+        break; // unknown wire type — stop parsing
+      }
     }
-    return result;
+    return msg;
   }
-
-  factory UserConfig.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory UserConfig.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static UserConfig? _defaultInstance;
-  static UserConfig create() => UserConfig._();
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UserConfig clone(UserConfig v) => v.deepCopy();
-  @$core.override
-  UserConfig deepCopy() => clone(this);
-  @$core.override
-  UserConfig createEmptyInstance() => create();
-  @$core.override
-  $pb.PbList<UserConfig> createRepeated() => $pb.PbList<UserConfig>();
-
-  $core.String get currentClub => $_getSZ(0);
-  set currentClub($core.String v) {
-    $_setString(0, v);
-  }
-
-  $core.bool hasCurrentClub() => $_has(0);
-  void clearCurrentClub() => $_clearField(1);
-
-  $core.double get targetDistanceYards => $_getN(1);
-  set targetDistanceYards($core.double v) {
-    $_setFloat(1, v);
-  }
-
-  $core.bool hasTargetDistanceYards() => $_has(1);
-  void clearTargetDistanceYards() => $_clearField(2);
 }
 
-class ConfigResponse extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-    _omitMessageNames ? '' : 'ConfigResponse',
-    package: const $pb.PackageName(_omitMessageNames ? '' : 'openflight'),
-    createEmptyInstance: create,
-  )
-    ..aOB(1, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
+class UserConfig {
+  String currentClub;
+  double targetDistanceYards;
 
-  ConfigResponse._() : super();
-  factory ConfigResponse({
-    $core.bool? success,
-  }) {
-    final result = create();
-    if (success != null) result.success = success;
-    return result;
+  UserConfig({
+    this.currentClub = '',
+    this.targetDistanceYards = 0.0,
+  });
+
+  Uint8List writeToBuffer() {
+    final out = <int>[];
+    if (currentClub.isNotEmpty) out.addAll(_fieldString(1, currentClub));
+    if (targetDistanceYards != 0.0) {
+      out.addAll(_fieldFloat(2, targetDistanceYards));
+    }
+    return Uint8List.fromList(out);
   }
 
-  factory ConfigResponse.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ConfigResponse.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static ConfigResponse? _defaultInstance;
-  static ConfigResponse create() => ConfigResponse._();
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ConfigResponse clone(ConfigResponse v) => v.deepCopy();
-  @$core.override
-  ConfigResponse deepCopy() => clone(this);
-  @$core.override
-  ConfigResponse createEmptyInstance() => create();
-  @$core.override
-  $pb.PbList<ConfigResponse> createRepeated() => $pb.PbList<ConfigResponse>();
-
-  $core.bool get success => $_getBF(0);
-  set success($core.bool v) {
-    $_setBool(0, v);
+  static UserConfig fromBuffer(List<int> data) {
+    final msg = UserConfig();
+    final buf = _toUint8(data);
+    var pos = 0;
+    while (pos < buf.length) {
+      final (tag, p1) = _readVarint(buf, pos);
+      pos = p1;
+      final fn = tag >> 3;
+      final wt = tag & 0x7;
+      if (wt == 2) {
+        final (length, p2) = _readVarint(buf, pos);
+        pos = p2;
+        if (fn == 1) msg.currentClub = _readString(buf, pos, length);
+        pos += length;
+      } else if (wt == 5) {
+        final v = _readFloat(buf, pos);
+        pos += 4;
+        if (fn == 2) msg.targetDistanceYards = v;
+      } else if (wt == 0) {
+        final (_, p2) = _readVarint(buf, pos);
+        pos = p2;
+      } else {
+        break;
+      }
+    }
+    return msg;
   }
-
-  $core.bool hasSuccess() => $_has(0);
-  void clearSuccess() => $_clearField(1);
 }
 
-class PingResponse extends $pb.GeneratedMessage {
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-    _omitMessageNames ? '' : 'PingResponse',
-    package: const $pb.PackageName(_omitMessageNames ? '' : 'openflight'),
-    createEmptyInstance: create,
-  )
-    ..aInt64(1, _omitFieldNames ? '' : 'serverTime')
-    ..hasRequiredFields = false;
+class ConfigResponse {
+  bool success;
 
-  PingResponse._() : super();
-  factory PingResponse({$core.int? serverTime}) {
-    final result = create();
-    if (serverTime != null) result.serverTime = serverTime;
-    return result;
+  ConfigResponse({this.success = false});
+
+  Uint8List writeToBuffer() {
+    if (!success) return Uint8List(0);
+    return Uint8List.fromList(_fieldBool(1, true));
   }
 
-  factory PingResponse.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory PingResponse.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static PingResponse? _defaultInstance;
-  static PingResponse create() => PingResponse._();
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PingResponse clone(PingResponse v) => v.deepCopy();
-  @$core.override
-  PingResponse deepCopy() => clone(this);
-  @$core.override
-  PingResponse createEmptyInstance() => create();
-  @$core.override
-  $pb.PbList<PingResponse> createRepeated() => $pb.PbList<PingResponse>();
-
-  $core.int get serverTime => $_getIZ(0);
-  set serverTime($core.int v) {
-    $_setInt64(0, v);
+  static ConfigResponse fromBuffer(List<int> data) {
+    final msg = ConfigResponse();
+    final buf = _toUint8(data);
+    var pos = 0;
+    while (pos < buf.length) {
+      final (tag, p1) = _readVarint(buf, pos);
+      pos = p1;
+      final fn = tag >> 3;
+      final wt = tag & 0x7;
+      if (wt == 0) {
+        final (v, p2) = _readVarint(buf, pos);
+        pos = p2;
+        if (fn == 1) msg.success = v != 0;
+      } else {
+        break;
+      }
+    }
+    return msg;
   }
-
-  $core.bool hasServerTime() => $_has(0);
-  void clearServerTime() => $_clearField(1);
 }
 
-const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+class PingResponse {
+  int serverTime;
+
+  PingResponse({this.serverTime = 0});
+
+  Uint8List writeToBuffer() {
+    if (serverTime == 0) return Uint8List(0);
+    return Uint8List.fromList(_fieldVarint(1, serverTime));
+  }
+
+  static PingResponse fromBuffer(List<int> data) {
+    final msg = PingResponse();
+    final buf = _toUint8(data);
+    var pos = 0;
+    while (pos < buf.length) {
+      final (tag, p1) = _readVarint(buf, pos);
+      pos = p1;
+      final fn = tag >> 3;
+      final wt = tag & 0x7;
+      if (wt == 0) {
+        final (v, p2) = _readVarint(buf, pos);
+        pos = p2;
+        if (fn == 1) msg.serverTime = v;
+      } else {
+        break;
+      }
+    }
+    return msg;
+  }
+}

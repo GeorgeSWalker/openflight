@@ -1,4 +1,4 @@
-// Auto-generated gRPC client/server stubs for openflight.proto
+// Hand-crafted gRPC client/server stubs for openflight.proto.
 // Re-generate with:
 //   dart pub global activate protoc_plugin
 //   protoc --dart_out=grpc:lib/proto -Iproto proto/openflight.proto
@@ -14,13 +14,11 @@ import 'dart:async' as $async;
 import 'dart:core' as $core;
 
 import 'package:grpc/service_api.dart' as $grpc;
-import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'openflight.pb.dart' as $0;
 
 export 'openflight.pb.dart';
 
-@$pb.ProtoMetadata()
 class LaunchMonitorClient extends $grpc.Client {
   static final _$streamShots = $grpc.ClientMethod<$0.Empty, $0.ShotData>(
     '/openflight.LaunchMonitor/StreamShots',
@@ -39,24 +37,34 @@ class LaunchMonitorClient extends $grpc.Client {
     ($core.List<$core.int> value) => $0.PingResponse.fromBuffer(value),
   );
 
-  LaunchMonitorClient($grpc.ClientChannel channel,
-      {$grpc.CallOptions? options,
-      $core.Iterable<$grpc.ClientInterceptor>? interceptors})
-      : super(channel, options: options, interceptors: interceptors);
+  LaunchMonitorClient(
+    $grpc.ClientChannel channel, {
+    $grpc.CallOptions? options,
+    $core.Iterable<$grpc.ClientInterceptor>? interceptors,
+  }) : super(channel, options: options, interceptors: interceptors);
 
-  $grpc.ResponseStream<$0.ShotData> streamShots($0.Empty request,
-      {$grpc.CallOptions? options}) {
-    return $createStreamingCall(_$streamShots, $async.Stream.value(request),
-        options: options);
+  $grpc.ResponseStream<$0.ShotData> streamShots(
+    $0.Empty request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createStreamingCall(
+      _$streamShots,
+      $async.Stream.value(request),
+      options: options,
+    );
   }
 
-  $grpc.ResponseFuture<$0.ConfigResponse> updateConfig($0.UserConfig request,
-      {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.ConfigResponse> updateConfig(
+    $0.UserConfig request, {
+    $grpc.CallOptions? options,
+  }) {
     return $createUnaryCall(_$updateConfig, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.PingResponse> ping($0.Empty request,
-      {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.PingResponse> ping(
+    $0.Empty request, {
+    $grpc.CallOptions? options,
+  }) {
     return $createUnaryCall(_$ping, request, options: options);
   }
 }

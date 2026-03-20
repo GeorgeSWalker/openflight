@@ -10,9 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # gRPC & Protobuf
+  # gRPC (protobuf package not needed — wire format is hand-crafted)
   grpc: ^4.0.0
-  protobuf: ^3.1.0
 
   # State management
   flutter_bloc: ^8.1.6

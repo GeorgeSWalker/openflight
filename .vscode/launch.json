@@ -10,6 +10,7 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
+      "preLaunchTask": "Mobile: flutter pub get",
       "args": [
         "--dart-define=MOCK_MODE=true"
       ]
@@ -20,6 +21,7 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/mobile",
       "program": "lib/main.dart",
+      "preLaunchTask": "Mobile: flutter pub get",
       "args": [
         "--dart-define=PI_HOST=${input:piHost}",
         "--dart-define=PI_PORT=${input:piPort}"
@@ -30,7 +32,8 @@
       "type": "dart",
       "request": "launch",
       "cwd": "${workspaceFolder}/mobile",
-      "program": "test/"
+      "program": "test/",
+      "preLaunchTask": "Mobile: flutter pub get"
     },
     // ─────────────────────────────────────────────────────
     // Python backend (Flask/WebSocket — existing web UI)
