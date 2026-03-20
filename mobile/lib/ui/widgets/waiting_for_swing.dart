@@ -70,7 +70,7 @@ class _WaitingForSwingState extends State<WaitingForSwing>
                       ),
                     ),
                   ),
-                  // Inner circle with icon
+                  // Inner glass circle with icon
                   Opacity(
                     opacity: _fade.value,
                     child: Container(
@@ -78,11 +78,18 @@ class _WaitingForSwingState extends State<WaitingForSwing>
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.accent.withValues(alpha: 0.08),
+                        color: AppColors.accent.withValues(alpha: 0.10),
                         border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.35),
+                          color: AppColors.accent.withValues(alpha: 0.40),
                           width: 1.5,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.20),
+                            blurRadius: 24,
+                            spreadRadius: 0,
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.sports_golf_outlined,

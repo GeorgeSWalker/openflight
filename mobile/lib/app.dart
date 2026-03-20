@@ -59,7 +59,8 @@ class _AppShellState extends State<_AppShell> {
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarColor: Color(0xFF070A12),
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
     // Auto-connect so the UI is live immediately.
