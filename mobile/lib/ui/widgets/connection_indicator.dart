@@ -1,30 +1,25 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:openflight_mobile/bloc/connection/connection_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
 import 'package:openflight_mobile/core/models/connection_state_model.dart';
-import 'package:openflight_mobile/providers/launch_monitor_provider.dart';
 
 /// Animated "heartbeat" indicator that shows gRPC connection status.
 ///
-/// - Connected: pulsing green dot
+/// - Connected: pulsing green dot + ping ms
 /// - Connecting: rotating arc
-/// - Disconnected / error: red dot with optional error badge
-class ConnectionIndicator extends ConsumerWidget {
+/// - Disconnected / error: red dot
+class ConnectionIndicator extends StatelessWidget {
   const ConnectionIndicator({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stateAsync = ref.watch(connectionStateProvider);
-
-    return stateAsync.when(
-      data: (state) => _IndicatorContent(state: state),
-      loading: () => const _IndicatorContent(state: ConnectionStateModel.initial),
-      error: (_, __) => const _StatusDot(color: AppColors.error),
-    );
-  }
+  Widget build(BuildContext context) =>
+      BlocBuilder<ConnectionCubit, ConnectionStateModel>(
+        builder: (_, state) => _IndicatorContent(state: state),
+      );
 }
 
 class _IndicatorContent extends StatelessWidget {
@@ -33,34 +28,34 @@ class _IndicatorContent extends StatelessWidget {
   final ConnectionStateModel state;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildDot(),
-        const SizedBox(width: AppSpacing.xs),
-        _buildLabel(context),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDot(),
+          const SizedBox(width: AppSpacing.xs),
+          _buildLabel(context),
+        ],
+      );
 
   Widget _buildDot() => switch (state.status) {
-        ConnectionStatus.connected => const _PulsingDot(color: AppColors.connected),
+        ConnectionStatus.connected =>
+          const _PulsingDot(color: AppColors.connected),
         ConnectionStatus.connecting => const _SpinningArc(),
-        ConnectionStatus.disconnected => const _StatusDot(color: AppColors.disconnected),
+        ConnectionStatus.disconnected =>
+          const _StatusDot(color: AppColors.disconnected),
         ConnectionStatus.error => const _StatusDot(color: AppColors.error),
       };
 
   Widget _buildLabel(BuildContext context) {
     final (text, color) = switch (state.status) {
-      ConnectionStatus.connected =>
-        ('${state.lastPingMs != null ? "${state.lastPingMs}ms" : "Connected"}',
-          AppColors.connected),
+      ConnectionStatus.connected => (
+          state.lastPingMs != null ? '${state.lastPingMs}ms' : 'Connected',
+          AppColors.connected,
+        ),
       ConnectionStatus.connecting => ('Connecting…', AppColors.connecting),
       ConnectionStatus.disconnected => ('No Signal', AppColors.disconnected),
       ConnectionStatus.error => ('Error', AppColors.error),
     };
-
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
@@ -85,7 +80,6 @@ class _StatusDot extends StatelessWidget {
       );
 }
 
-/// Pulsing dot for the "connected" state.
 class _PulsingDot extends StatefulWidget {
   const _PulsingDot({required this.color});
 
@@ -121,14 +115,11 @@ class _PulsingDotState extends State<_PulsingDot>
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: _scale,
-        builder: (_, __) => Transform.scale(
-          scale: _scale.value,
-          child: _StatusDot(color: widget.color),
-        ),
+        builder: (_, __) =>
+            Transform.scale(scale: _scale.value, child: _StatusDot(color: widget.color)),
       );
 }
 
-/// Rotating arc for the "connecting" state.
 class _SpinningArc extends StatefulWidget {
   const _SpinningArc();
 
@@ -172,18 +163,16 @@ class _ArcPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.connecting
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-
     canvas.drawArc(
       Rect.fromLTWH(0, 0, size.width, size.height),
       progress * 2 * math.pi,
       math.pi * 1.2,
       false,
-      paint,
+      Paint()
+        ..color = AppColors.connecting
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..strokeCap = StrokeCap.round,
     );
   }
 

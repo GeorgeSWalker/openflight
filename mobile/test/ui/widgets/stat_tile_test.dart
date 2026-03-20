@@ -33,7 +33,7 @@ void main() {
       expect(find.text('mph'), findsNothing);
     });
 
-    testWidgets('highlighted tile has accent border', (tester) async {
+    testWidgets('highlighted tile uses accent border', (tester) async {
       await tester.pumpWidget(_wrap(
         const StatTile(label: 'Carry', value: '248', highlighted: true),
       ));

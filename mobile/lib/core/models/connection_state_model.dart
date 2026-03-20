@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 /// gRPC connection lifecycle state.
 enum ConnectionStatus {
   disconnected,
@@ -6,7 +8,7 @@ enum ConnectionStatus {
   error,
 }
 
-class ConnectionStateModel {
+class ConnectionStateModel extends Equatable {
   const ConnectionStateModel({
     required this.status,
     this.host = '',
@@ -20,7 +22,7 @@ class ConnectionStateModel {
   final int port;
   final String? lastError;
 
-  /// Round-trip time from last successful Ping RPC in milliseconds.
+  /// Round-trip time from the last successful Ping RPC in milliseconds.
   final int? lastPingMs;
 
   bool get isConnected => status == ConnectionStatus.connected;
@@ -44,4 +46,7 @@ class ConnectionStateModel {
   static const initial = ConnectionStateModel(
     status: ConnectionStatus.disconnected,
   );
+
+  @override
+  List<Object?> get props => [status, host, port, lastError, lastPingMs];
 }
