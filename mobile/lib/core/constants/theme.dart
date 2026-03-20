@@ -86,12 +86,12 @@ ThemeData buildAppTheme() {
     ),
     scaffoldBackgroundColor: AppColors.background,
     textTheme: textTheme,
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: AppColors.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(AppRadius.md),
-        side: const BorderSide(color: AppColors.divider, width: 1),
+        side: BorderSide(color: AppColors.divider, width: 1),
       ),
     ),
     appBarTheme: AppBarTheme(
