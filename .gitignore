@@ -33,7 +33,9 @@ env/
 uv.lock
 
 # IDE
-.vscode/
+# Keep shared VS Code configs (launch, tasks, extensions) but not personal settings
+.vscode/settings.json
+.vscode/*.code-workspace
 .idea/
 *.swp
 *.swo

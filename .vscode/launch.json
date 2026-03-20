@@ -1,0 +1,123 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // ─────────────────────────────────────────────────────
+    // Flutter mobile app
+    // ─────────────────────────────────────────────────────
+    {
+      "name": "Mobile: Mock (no hardware)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=MOCK_MODE=true"
+      ]
+    },
+    {
+      "name": "Mobile: Connect to Pi",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=PI_HOST=${input:piHost}",
+        "--dart-define=PI_PORT=${input:piPort}"
+      ]
+    },
+    {
+      "name": "Mobile: Tests",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/mobile",
+      "program": "test/"
+    },
+    // ─────────────────────────────────────────────────────
+    // Python backend (Flask/WebSocket — existing web UI)
+    // ─────────────────────────────────────────────────────
+    {
+      "name": "Backend: Mock mode",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "openflight.server",
+      "args": ["--mock"],
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Backend: Streaming mode (radar required)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "openflight.server",
+      "args": ["--mode", "streaming"],
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Backend: Rolling-buffer + sound trigger",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "openflight.server",
+      "args": ["--mode", "rolling-buffer", "--trigger", "sound"],
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      },
+      "justMyCode": true
+    }
+  ],
+
+  // ─────────────────────────────────────────────────────
+  // Compound: start backend + mobile app together
+  // ─────────────────────────────────────────────────────
+  "compounds": [
+    {
+      "name": "Full Stack: Mock (backend + mobile)",
+      "configurations": [
+        "Backend: Mock mode",
+        "Mobile: Mock (no hardware)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Full Stack: Pi hardware (backend + mobile)",
+      "configurations": [
+        "Backend: Streaming mode (radar required)",
+        "Mobile: Connect to Pi"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    }
+  ],
+
+  // ─────────────────────────────────────────────────────
+  // Input prompts for Pi address
+  // ─────────────────────────────────────────────────────
+  "inputs": [
+    {
+      "id": "piHost",
+      "type": "promptString",
+      "description": "Raspberry Pi IP address",
+      "default": "192.168.1.100"
+    },
+    {
+      "id": "piPort",
+      "type": "promptString",
+      "description": "gRPC port on the Pi",
+      "default": "50051"
+    }
+  ]
+}

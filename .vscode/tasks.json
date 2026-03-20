@@ -1,0 +1,130 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ─────────────────────────────────────────────────────
+    // Python backend tasks
+    // ─────────────────────────────────────────────────────
+    {
+      "label": "Backend: install deps (uv sync)",
+      "type": "shell",
+      "command": "uv sync --extra ui",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: start mock server",
+      "type": "shell",
+      "command": "uv run python -m openflight.server --mock",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*)$",
+          "file": 1,
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting",
+          "endsPattern": "Server starting at"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "backend"
+      }
+    },
+    {
+      "label": "Backend: run tests",
+      "type": "shell",
+      "command": "uv run pytest tests/ -v",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: lint",
+      "type": "shell",
+      "command": "uv run pylint src/openflight/ --fail-under=9 && uv run ruff check src/openflight/",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+
+    // ─────────────────────────────────────────────────────
+    // Flutter mobile tasks
+    // ─────────────────────────────────────────────────────
+    {
+      "label": "Mobile: flutter pub get",
+      "type": "shell",
+      "command": "flutter pub get",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Mobile: run tests",
+      "type": "shell",
+      "command": "flutter test",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Mobile: flutter analyze",
+      "type": "shell",
+      "command": "flutter analyze",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Mobile: build APK (release)",
+      "type": "shell",
+      "command": "flutter build apk --release",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Mobile: generate proto stubs",
+      "type": "shell",
+      "command": "bash scripts/generate_proto.sh",
+      "options": { "cwd": "${workspaceFolder}/mobile" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}

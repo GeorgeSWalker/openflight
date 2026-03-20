@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    // Flutter / Dart
+    "Dart-Code.flutter",
+    "Dart-Code.dart-code",
+    // Python backend
+    "ms-python.python",
+    "ms-python.debugpy",
+    "ms-python.pylint",
+    "charliermarsh.ruff",
+    // Proto files
+    "zxh404.vscode-proto3",
+    // General
+    "EditorConfig.EditorConfig",
+    "GitHub.copilot"
+  ]
+}
