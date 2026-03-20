@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:openflight_mobile/bloc/app_mode/app_mode_cubit.dart';
 import 'package:openflight_mobile/bloc/club/club_cubit.dart';
+import 'package:openflight_mobile/bloc/clubs/user_clubs_cubit.dart';
 import 'package:openflight_mobile/bloc/connection/connection_cubit.dart';
 import 'package:openflight_mobile/bloc/session/session_cubit.dart';
 import 'package:openflight_mobile/bloc/settings/settings_cubit.dart';
@@ -40,6 +41,9 @@ class OpenFlightApp extends StatelessWidget {
           BlocProvider(create: (_) => AppModeCubit()),
           BlocProvider(
             create: (_) => SettingsCubit()..load(),
+          ),
+          BlocProvider(
+            create: (_) => UserClubsCubit()..load(),
           ),
           BlocProvider(
             create: (_) => SessionCubit(sessionService),

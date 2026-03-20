@@ -321,6 +321,7 @@ class _HeroCarryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
+      constraints: const BoxConstraints(minHeight: 110),
       decoration: const BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.all(AppRadius.md),
@@ -340,7 +341,7 @@ class _HeroCarryCard extends StatelessWidget {
               bottom: -12,
               child: Icon(
                 Icons.flag_outlined,
-                size: 96,
+                size: 120,
                 color: AppColors.onSurface.withValues(alpha: 0.04),
               ),
             ),
@@ -388,17 +389,28 @@ class _HeroCarryCard extends StatelessWidget {
                               ),
                               style: theme.textTheme.displayLarge?.copyWith(
                                 color: AppColors.accent,
+                                fontSize: 64,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              UnitConverter.carryUnit(metric: metric),
-                              style: theme.textTheme.bodyMedium,
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                UnitConverter.carryUnit(metric: metric),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: AppColors.onSurfaceMuted,
+                                ),
+                              ),
                             ),
                           ],
+                        ),
+                        Text(
+                          'Ball ${UnitConverter.speed(shot.ballSpeedMph, metric: metric)}'
+                          '  ·  Club ${UnitConverter.speed(shot.clubSpeedMph, metric: metric)}',
+                          style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),

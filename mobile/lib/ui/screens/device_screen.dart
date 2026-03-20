@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:openflight_mobile/bloc/clubs/user_clubs_cubit.dart';
 import 'package:openflight_mobile/bloc/connection/connection_cubit.dart';
 import 'package:openflight_mobile/bloc/settings/settings_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
@@ -27,6 +28,8 @@ class DeviceScreen extends StatelessWidget {
               const _ConnectionForm(),
               const SizedBox(height: AppSpacing.md),
               const _PreferencesCard(),
+              const SizedBox(height: AppSpacing.md),
+              const _ClubManagementCard(),
               const SizedBox(height: AppSpacing.md),
               _DeviceInfoCard(state: state),
             ],
@@ -394,6 +397,148 @@ class _ToggleButton extends StatelessWidget {
           ),
         ),
       );
+}
+
+// ---------------------------------------------------------------------------
+// Club management card
+// ---------------------------------------------------------------------------
+
+class _ClubManagementCard extends StatefulWidget {
+  const _ClubManagementCard();
+
+  @override
+  State<_ClubManagementCard> createState() => _ClubManagementCardState();
+}
+
+class _ClubManagementCardState extends State<_ClubManagementCard> {
+  final _addController = TextEditingController();
+
+  @override
+  void dispose() {
+    _addController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return BlocBuilder<UserClubsCubit, UserClubsState>(
+      builder: (context, state) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.all(AppRadius.md),
+          border: Border.fromBorderSide(
+            BorderSide(color: AppColors.outlineVariant),
+          ),
+        ),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('MY CLUBS', style: theme.textTheme.labelSmall),
+                const Spacer(),
+                TextButton(
+                  onPressed: () =>
+                      context.read<UserClubsCubit>().resetToDefaults(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.onSurfaceMuted,
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    textStyle: theme.textTheme.labelSmall,
+                  ),
+                  child: const Text('Reset'),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // Club chips with remove buttons
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: state.clubs.map((id) {
+                final canRemove = state.clubs.length > 1;
+                return Chip(
+                  label: Text(
+                    id,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                  backgroundColor:
+                      AppColors.accent.withValues(alpha: 0.10),
+                  side: BorderSide(
+                    color: AppColors.accent.withValues(alpha: 0.30),
+                  ),
+                  deleteIcon: canRemove
+                      ? const Icon(Icons.close, size: 14)
+                      : null,
+                  deleteIconColor: AppColors.onSurfaceMuted,
+                  onDeleted: canRemove
+                      ? () =>
+                          context.read<UserClubsCubit>().removeClub(id)
+                      : null,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Add club input
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _addController,
+                    style: const TextStyle(
+                      color: AppColors.onSurface,
+                      fontSize: 14,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Add club (e.g. 60°, 2I, 7W)',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.sm,
+                      ),
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                    onSubmitted: (_) => _addClub(context),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                FilledButton(
+                  onPressed: () => _addClub(context),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.onAccent,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    minimumSize: Size.zero,
+                  ),
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addClub(BuildContext context) {
+    final id = _addController.text.trim();
+    if (id.isEmpty) return;
+    context.read<UserClubsCubit>().addClub(id);
+    _addController.clear();
+  }
 }
 
 // ---------------------------------------------------------------------------

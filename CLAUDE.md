@@ -150,6 +150,72 @@ uv run python scripts/test_sound_trigger_hardware.py
 uv run python scripts/test_sound_trigger_software.py
 ```
 
+## Flutter Mobile App (`mobile/`)
+
+A companion Flutter app that connects to the gRPC server and displays live shot data.
+
+### Flutter Commands (run from `mobile/`)
+
+```bash
+flutter pub get            # Install dependencies
+flutter run                # Run on connected device / emulator
+flutter test               # Run unit + widget tests
+flutter analyze            # Static analysis (must pass clean)
+```
+
+### Mobile Architecture
+
+```
+App (BLoC providers)
+ ├── ConnectionCubit  — gRPC connect/disconnect, status
+ ├── ShotCubit        — 20-shot ring buffer, latest shot
+ ├── ClubCubit        — selected club (sent to radar)
+ ├── UserClubsCubit   — user's customised club list (SharedPreferences)
+ ├── SessionCubit     — record / end / persist sessions (JSON files)
+ ├── SettingsCubit    — imperial/metric units (SharedPreferences)
+ ├── TargetDistanceCubit — target distance slider value
+ └── AppModeCubit     — active tab (dashboard/simulator/compare/history/device)
+```
+
+### Key Mobile Files
+
+- `lib/app.dart` — root widget, BLoC providers, lifecycle observer
+- `lib/services/launch_monitor_client.dart` — gRPC client + `MockLaunchMonitorClient`
+- `lib/services/session_service.dart` — JSON session persistence (`<docs>/openflight_sessions/`)
+- `lib/core/utils/unit_converter.dart` — imperial ↔ metric helpers
+- `lib/core/constants/theme.dart` — design tokens (colours, spacing, typography)
+- `lib/ui/screens/dashboard_screen.dart` — hero carry card + secondary stats grid
+- `lib/ui/screens/compare_screen.dart` — club averages table with time/club filters
+- `lib/ui/screens/history_screen.dart` — live shot log + saved sessions with dispersion thumbnails
+- `lib/ui/screens/device_screen.dart` — connection form, units toggle, club management
+- `lib/ui/widgets/dispersion_canvas.dart` — 2D shot dispersion (interactive or thumbnail)
+- `lib/ui/widgets/club_picker.dart` — two-row chip grid driven by `UserClubsCubit`
+
+### Session Behaviour
+
+- Sessions are **manually started** via the Record button in the History tab.
+- Shots are only added to an active session; the live ring-buffer always updates.
+- Sessions auto-save after every shot so data survives crashes.
+- Sessions **auto-end** after 5 minutes with no new shots (idle timeout).
+- Sessions **auto-end** after 200 shots (hard cap — prevents indefinite mock accumulation).
+- In mock/test mode shots stream every 4 seconds, so the 200-shot cap ends after ~13 min.
+
+### Club Customisation
+
+- Default clubs come from `kClubIds` in `shot_data_model.dart`.
+- `UserClubsCubit` persists the user's club list to `SharedPreferences` under `user_clubs_v1`.
+- Add/remove clubs via the **Device → My Clubs** card; changes reflect immediately in the picker.
+- Custom clubs (e.g. `60°`, `2I`) are categorised automatically: ending in `°` → wedge colour.
+
+### Dependencies (mobile)
+
+- `flutter_bloc` / `equatable` — state management
+- `google_fonts` — Space Grotesk (numbers/display) + Inter (body)
+- `shared_preferences: ^2.3.2` — settings + user club list persistence
+- `path_provider: ^2.1.4` — session file storage location
+- `intl` — date/time formatting
+- `grpc` / `protobuf` — gRPC client for Raspberry Pi connection
+
 ## Architecture
 
 ```

@@ -5,57 +5,67 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:openflight_mobile/bloc/club/club_cubit.dart';
+import 'package:openflight_mobile/bloc/clubs/user_clubs_cubit.dart';
 import 'package:openflight_mobile/bloc/target_distance/target_distance_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
-import 'package:openflight_mobile/core/models/shot_data_model.dart';
-
-// Club categories displayed as two evenly-spaced rows.
-const _kRow1 = ['DR', '3W', '5W', '4H', '5H', '4I', '5I', '6I'];
-const _kRow2 = ['7I', '8I', '9I', 'PW', 'GW', 'SW', 'LW'];
 
 /// Full-width club picker arranged in two evenly-spaced rows.
 ///
-/// Each chip fills an equal fraction of the available width so the grid
-/// always spans edge-to-edge regardless of screen size.
+/// The club list is taken from [UserClubsCubit], so users can add or remove
+/// clubs from the Device screen. Each chip fills an equal fraction of the
+/// available width so the grid always spans edge-to-edge.
 class ClubPicker extends StatelessWidget {
   const ClubPicker({super.key});
 
   @override
   Widget build(BuildContext context) =>
-      BlocBuilder<ClubCubit, String>(
-        builder: (context, selected) => ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest.withValues(alpha: 0.85),
-                border: const Border(
-                  bottom: BorderSide(
-                    color: AppColors.outlineVariant,
-                    width: 1,
+      BlocBuilder<UserClubsCubit, UserClubsState>(
+        builder: (context, clubsState) =>
+            BlocBuilder<ClubCubit, String>(
+          builder: (context, selected) {
+            final clubs = clubsState.clubs;
+            final mid = (clubs.length / 2).ceil();
+            final row1 = clubs.sublist(0, mid);
+            final row2 = clubs.sublist(mid);
+
+            return ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLowest
+                        .withValues(alpha: 0.85),
+                    border: const Border(
+                      bottom: BorderSide(
+                        color: AppColors.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ClubRow(clubs: row1, selected: selected),
+                        if (row2.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _ClubRow(
+                            clubs: row2,
+                            selected: selected,
+                            padToCount: row1.length,
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ClubRow(clubs: _kRow1, selected: selected),
-                    const SizedBox(height: AppSpacing.xs),
-                    _ClubRow(
-                      clubs: _kRow2,
-                      selected: selected,
-                      padToCount: _kRow1.length,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+            );
+          },
         ),
       );
 }
@@ -89,7 +99,6 @@ class _ClubRow extends StatelessWidget {
             ),
           ),
         ),
-        // Fill remaining columns with invisible spacers for alignment
         for (var i = 0; i < phantoms; i++) const Expanded(child: SizedBox()),
       ],
     );
@@ -109,7 +118,8 @@ class _ClubChip extends StatelessWidget {
     final isWedge = clubId == 'PW' ||
         clubId == 'GW' ||
         clubId == 'SW' ||
-        clubId == 'LW';
+        clubId == 'LW' ||
+        clubId.endsWith('°');
 
     final inactiveColor = isWood
         ? AppColors.secondary.withValues(alpha: 0.65)

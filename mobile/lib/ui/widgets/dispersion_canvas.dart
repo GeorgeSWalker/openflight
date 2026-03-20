@@ -9,16 +9,24 @@ import 'package:openflight_mobile/core/models/shot_data_model.dart';
 import 'package:openflight_mobile/core/utils/unit_converter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Top-down 2D "targeting" view — tap a dot to see a full shot breakdown.
+/// Top-down 2D "targeting" view.
+///
+/// When [interactive] is true (default), dots are tappable and show a full
+/// shot breakdown sheet. When false, the canvas is read-only — suitable for
+/// compact thumbnails in session cards.
 class DispersionCanvas extends StatefulWidget {
   const DispersionCanvas({
     super.key,
     required this.history,
     required this.targetDistanceYards,
+    this.interactive = true,
   });
 
   final List<ShotDataModel> history;
   final double targetDistanceYards;
+
+  /// Whether tap-to-select is enabled. Set to false for thumbnail previews.
+  final bool interactive;
 
   @override
   State<DispersionCanvas> createState() => _DispersionCanvasState();
@@ -79,7 +87,26 @@ class _DispersionCanvasState extends State<DispersionCanvas> {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, settings) => LayoutBuilder(
         builder: (context, constraints) {
-          final size = Size(constraints.maxWidth, constraints.maxHeight);
+          final painter = _DispersionPainter(
+            history: widget.history,
+            targetDistanceYards: widget.targetDistanceYards,
+            selectedShot: _selectedShot,
+            metric: settings.metric,
+          );
+
+          final canvas = ClipRRect(
+            borderRadius: const BorderRadius.all(AppRadius.md),
+            child: CustomPaint(
+              painter: painter,
+              child: const SizedBox.expand(),
+            ),
+          );
+
+          // Thumbnail mode: fixed 16:9 aspect ratio, no tap detection.
+          if (!widget.interactive) {
+            return AspectRatio(aspectRatio: 16 / 9, child: canvas);
+          }
+
           return AspectRatio(
             aspectRatio: 9 / 16,
             child: ClipRRect(
@@ -87,12 +114,7 @@ class _DispersionCanvasState extends State<DispersionCanvas> {
               child: GestureDetector(
                 onTapUp: (d) => _handleTap(d, _canvasSize(constraints)),
                 child: CustomPaint(
-                  painter: _DispersionPainter(
-                    history: widget.history,
-                    targetDistanceYards: widget.targetDistanceYards,
-                    selectedShot: _selectedShot,
-                    metric: settings.metric,
-                  ),
+                  painter: painter,
                   child: const SizedBox.expand(),
                 ),
               ),

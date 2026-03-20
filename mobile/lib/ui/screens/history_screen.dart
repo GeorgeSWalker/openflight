@@ -339,6 +339,23 @@ class _SavedSessionCard extends StatelessWidget {
               ),
             ),
           ],
+          // Dispersion thumbnail
+          if (session.shotCount > 1) ...[
+            const Divider(height: 1, color: AppColors.divider),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.xs,
+              ),
+              child: DispersionCanvas(
+                history: session.shots,
+                targetDistanceYards: session.avgCarry ?? 150,
+                interactive: false,
+              ),
+            ),
+          ],
           // Expand button
           if (session.shotCount > 0)
             TextButton(
