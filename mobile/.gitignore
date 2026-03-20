@@ -64,3 +64,4 @@ unity/**/*.suo
 *.log
 .DS_Store
 coverage/
+/pubspec.lock
