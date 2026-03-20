@@ -37,6 +37,9 @@ ui = [
     "python-socketio>=5.10.0",
     "eventlet>=0.35.0",
 ]
+grpc = [
+    "grpcio>=1.60.0",
+]
 # Camera support for launch angle detection
 camera = [
     "opencv-python>=4.5.0",

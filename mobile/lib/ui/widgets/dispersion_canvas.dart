@@ -106,14 +106,14 @@ class _DispersionPainter extends CustomPainter {
       Offset(cx, dy),
       20,
       Paint()
-        ..color = AppColors.accent.withOpacity(0.12)
+        ..color = AppColors.accent.withValues(alpha:0.12)
         ..style = PaintingStyle.fill,
     );
     canvas.drawCircle(
       Offset(cx, dy),
       20,
       Paint()
-        ..color = AppColors.accent.withOpacity(0.4)
+        ..color = AppColors.accent.withValues(alpha:0.4)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -146,13 +146,13 @@ class _DispersionPainter extends CustomPainter {
 
       final color = isLatest
           ? AppColors.accent
-          : AppColors.accent.withOpacity(0.6 - age * 0.45);
+          : AppColors.accent.withValues(alpha:0.6 - age * 0.45);
 
       // Shadow
       canvas.drawCircle(
         Offset(dx + 1, dy + 1),
         isLatest ? 6 : 4,
-        Paint()..color = Colors.black.withOpacity(0.3),
+        Paint()..color = Colors.black.withValues(alpha:0.3),
       );
 
       canvas.drawCircle(
@@ -167,7 +167,7 @@ class _DispersionPainter extends CustomPainter {
           Offset(dx, dy),
           12,
           Paint()
-            ..color = AppColors.accent.withOpacity(0.25)
+            ..color = AppColors.accent.withValues(alpha:0.25)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
         );

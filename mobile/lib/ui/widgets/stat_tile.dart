@@ -32,7 +32,7 @@ class StatTile extends StatelessWidget {
     final valueColor =
         highlighted ? AppColors.accent : AppColors.onSurface;
     final borderColor =
-        highlighted ? AppColors.accent.withOpacity(0.5) : AppColors.divider;
+        highlighted ? AppColors.accent.withValues(alpha: 0.5) : AppColors.divider;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

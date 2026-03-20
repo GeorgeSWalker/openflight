@@ -226,7 +226,7 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) => NavigationBar(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.accent.withOpacity(0.2),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.2),
         selectedIndex: currentMode.index,
         onDestinationSelected: (i) =>
             context.read<AppModeCubit>().switchTo(AppMode.values[i]),

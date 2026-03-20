@@ -153,7 +153,7 @@ class _ShotStrip extends StatelessWidget {
             end: Alignment.topCenter,
             colors: [
               AppColors.background,
-              AppColors.background.withOpacity(0),
+              AppColors.background.withValues(alpha: 0.0),
             ],
           ),
         ),

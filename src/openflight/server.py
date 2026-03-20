@@ -57,6 +57,10 @@ debug_mode: bool = False
 debug_log_file = None
 debug_log_path: Optional[Path] = None
 
+# gRPC state (None when gRPC is not enabled)
+_grpc_server = None
+_grpc_servicer = None
+
 # Camera state
 camera: Optional["Picamera2"] = None
 camera_tracker: Optional["CameraTracker"] = None
@@ -840,6 +844,13 @@ def on_shot_detected(shot: Shot):
     except Exception as e:
         logger.warning("Failed to log shot: %s", e)
 
+    # Forward shot to gRPC subscribers (if gRPC server is running)
+    if _grpc_servicer is not None:
+        try:
+            _grpc_servicer.notify_shot(shot)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.warning("gRPC notify_shot failed: %s", e)
+
     # Emit shot with launch angle data included
     try:
         shot_data = shot_to_dict(shot)
@@ -1274,6 +1285,12 @@ def main():
         default=200,
         help="Debounce time in ms for sound-gpio trigger (default: 200)",
     )
+    parser.add_argument(
+        "--grpc-port",
+        type=int,
+        default=None,
+        help="Enable gRPC server on this port (e.g. 50051) for the mobile app",
+    )
     args = parser.parse_args()
 
     # Configure logging - always show INFO and above for openflight modules
@@ -1362,6 +1379,19 @@ def main():
         print("Running in MOCK mode - no radar required")
         print("Simulate shots via WebSocket or API")
 
+    # Start gRPC server (optional — only when --grpc-port is supplied)
+    global _grpc_server, _grpc_servicer  # pylint: disable=global-statement
+    if args.grpc_port:
+        from .grpc_server import start_grpc_server  # pylint: disable=import-outside-toplevel
+
+        _grpc_servicer, _grpc_server = start_grpc_server(
+            monitor=monitor,
+            host=args.host,
+            port=args.grpc_port,
+        )
+        print(f"gRPC server listening on {args.host}:{args.grpc_port}")
+        print()
+
     print(f"Server starting at http://{args.host}:{args.web_port}")
     print()
 
@@ -1377,6 +1407,10 @@ def main():
             camera.stop()
             camera.close()
         stop_monitor()
+        if _grpc_server is not None:
+            from .grpc_server import stop_grpc_server  # pylint: disable=import-outside-toplevel
+
+            stop_grpc_server(_grpc_server)
 
 
 if __name__ == "__main__":
