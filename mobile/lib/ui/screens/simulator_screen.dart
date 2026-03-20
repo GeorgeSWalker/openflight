@@ -39,7 +39,7 @@ class _SimulatorScreenState extends State<SimulatorScreen> {
     _unityController = controller;
   }
 
-  void _onUnityMessage(UnityWidgetController controller, String? message) {
+  void _onUnityMessage(dynamic message) {
     if (message == 'ready') setState(() => _unityReady = true);
   }
 
