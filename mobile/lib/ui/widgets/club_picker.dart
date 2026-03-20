@@ -9,30 +9,21 @@ import 'package:openflight_mobile/bloc/target_distance/target_distance_cubit.dar
 import 'package:openflight_mobile/core/constants/theme.dart';
 import 'package:openflight_mobile/core/models/shot_data_model.dart';
 
-/// Horizontal scrolling club picker with a frosted-glass background strip.
+// Club categories displayed as two evenly-spaced rows.
+const _kRow1 = ['DR', '3W', '5W', '4H', '5H', '4I', '5I', '6I'];
+const _kRow2 = ['7I', '8I', '9I', 'PW', 'GW', 'SW', 'LW'];
+
+/// Full-width club picker arranged in two evenly-spaced rows.
 ///
-/// Tapping a chip calls [ClubCubit.select], which updates local state
-/// immediately and fires the gRPC UpdateConfig RPC to sync with the Pi.
-class ClubPicker extends StatefulWidget {
+/// Each chip fills an equal fraction of the available width so the grid
+/// always spans edge-to-edge regardless of screen size.
+class ClubPicker extends StatelessWidget {
   const ClubPicker({super.key});
-
-  @override
-  State<ClubPicker> createState() => _ClubPickerState();
-}
-
-class _ClubPickerState extends State<ClubPicker> {
-  final _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) =>
       BlocBuilder<ClubCubit, String>(
-        builder: (context, selectedClub) => ClipRect(
+        builder: (context, selected) => ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
             child: DecoratedBox(
@@ -45,81 +36,122 @@ class _ClubPickerState extends State<ClubPicker> {
                   ),
                 ),
               ),
-              child: SizedBox(
-                height: 52,
-                child: ListView.separated(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  itemCount: kClubIds.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: AppSpacing.xs + 2),
-                  itemBuilder: (context, index) {
-                    final club = kClubIds[index];
-                    return _ClubChip(
-                      clubId: club,
-                      isSelected: club == selectedClub,
-                      onTap: () => _onTap(context, club),
-                    );
-                  },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ClubRow(clubs: _kRow1, selected: selected),
+                    const SizedBox(height: AppSpacing.xs),
+                    _ClubRow(
+                      clubs: _kRow2,
+                      selected: selected,
+                      padToCount: _kRow1.length,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       );
+}
 
-  void _onTap(BuildContext context, String clubId) {
-    final target = context.read<TargetDistanceCubit>().state;
-    context.read<ClubCubit>().select(clubId, targetDistanceYards: target);
+class _ClubRow extends StatelessWidget {
+  const _ClubRow({
+    required this.clubs,
+    required this.selected,
+    this.padToCount,
+  });
+
+  final List<String> clubs;
+  final String selected;
+
+  /// If set, add phantom spacers so this row matches [padToCount] columns.
+  final int? padToCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final phantoms = padToCount != null ? padToCount! - clubs.length : 0;
+    return Row(
+      children: [
+        ...clubs.map(
+          (clubId) => Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1.5),
+              child: _ClubChip(
+                clubId: clubId,
+                isSelected: clubId == selected,
+              ),
+            ),
+          ),
+        ),
+        // Fill remaining columns with invisible spacers for alignment
+        for (var i = 0; i < phantoms; i++) const Expanded(child: SizedBox()),
+      ],
+    );
   }
 }
 
 class _ClubChip extends StatelessWidget {
-  const _ClubChip({
-    required this.clubId,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _ClubChip({required this.clubId, required this.isSelected});
 
   final String clubId;
   final bool isSelected;
-  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 5,
-          ),
-          decoration: BoxDecoration(
+  Widget build(BuildContext context) {
+    final isWood = clubId == 'DR' || clubId.endsWith('W');
+    final isHybrid = clubId.endsWith('H');
+    final isWedge = clubId == 'PW' ||
+        clubId == 'GW' ||
+        clubId == 'SW' ||
+        clubId == 'LW';
+
+    final inactiveColor = isWood
+        ? AppColors.secondary.withValues(alpha: 0.65)
+        : isHybrid
+            ? AppColors.warning.withValues(alpha: 0.65)
+            : isWedge
+                ? AppColors.error.withValues(alpha: 0.65)
+                : AppColors.onSurfaceMuted;
+
+    return GestureDetector(
+      onTap: () {
+        final target = context.read<TargetDistanceCubit>().state;
+        context.read<ClubCubit>().select(clubId, targetDistanceYards: target);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        height: 30,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.accent.withValues(alpha: 0.18)
+              : Colors.transparent,
+          borderRadius: const BorderRadius.all(AppRadius.sm),
+          border: Border.all(
             color: isSelected
-                ? AppColors.accent.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: const BorderRadius.all(AppRadius.sm),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.accent.withValues(alpha: 0.50)
-                  : AppColors.outlineVariant,
-              width: 1,
-            ),
+                ? AppColors.accent
+                : AppColors.outlineVariant.withValues(alpha: 0.6),
+            width: isSelected ? 1.5 : 1,
           ),
+        ),
+        child: Center(
           child: Text(
             clubId,
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? AppColors.accent : AppColors.onSurfaceMuted,
-              letterSpacing: 0.2,
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              color: isSelected ? AppColors.accent : inactiveColor,
+              letterSpacing: 0.1,
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }

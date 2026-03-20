@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:openflight_mobile/bloc/session/session_cubit.dart';
+import 'package:openflight_mobile/bloc/settings/settings_cubit.dart';
 import 'package:openflight_mobile/bloc/shot/shot_cubit.dart';
 import 'package:openflight_mobile/bloc/target_distance/target_distance_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
 import 'package:openflight_mobile/core/models/shot_data_model.dart';
+import 'package:openflight_mobile/core/utils/unit_converter.dart';
 import 'package:openflight_mobile/ui/widgets/dispersion_canvas.dart';
 import 'package:openflight_mobile/ui/widgets/stat_tile.dart';
 import 'package:openflight_mobile/ui/widgets/waiting_for_swing.dart';
 
 // ---------------------------------------------------------------------------
-// Info text content
+// Info text constants
 // ---------------------------------------------------------------------------
 
 const _infoCarry =
@@ -51,19 +54,16 @@ const _infoSmash =
 
 const _infoDispersion =
     'A bird\'s-eye view showing where your last shots landed relative to the '
-    'target flag. Tight clusters = consistent striking. Spread-out dots = '
-    'variable distance or direction.';
+    'target flag. Tap any dot to see the full breakdown for that shot.';
 
 const _infoTarget =
     'The distance you\'re trying to hit. Adjust the slider to match your '
-    'intended carry target. The flag in the dispersion chart moves to this '
-    'distance.';
+    'intended carry target. The flag moves to this distance in the chart.';
 
 // ---------------------------------------------------------------------------
 // Screen
 // ---------------------------------------------------------------------------
 
-/// Primary stats dashboard — bento grid layout with hero carry card.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -73,10 +73,14 @@ class DashboardScreen extends StatelessWidget {
         builder: (context, shotState) {
           if (!shotState.hasShot) return const WaitingForSwing();
           return BlocBuilder<TargetDistanceCubit, double>(
-            builder: (context, target) => _DashboardLayout(
-              shot: shotState.latestShot!,
-              history: shotState.history,
-              targetDistanceYards: target,
+            builder: (context, target) =>
+                BlocBuilder<SettingsCubit, SettingsState>(
+              builder: (context, settings) => _DashboardLayout(
+                shot: shotState.latestShot!,
+                history: shotState.history,
+                targetDistanceYards: target,
+                metric: settings.metric,
+              ),
             ),
           );
         },
@@ -88,11 +92,13 @@ class _DashboardLayout extends StatelessWidget {
     required this.shot,
     required this.history,
     required this.targetDistanceYards,
+    required this.metric,
   });
 
   final ShotDataModel shot;
   final List<ShotDataModel> history;
   final double targetDistanceYards;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
@@ -103,11 +109,13 @@ class _DashboardLayout extends StatelessWidget {
             shot: shot,
             history: history,
             targetDistanceYards: targetDistanceYards,
+            metric: metric,
           )
         : _PortraitLayout(
             shot: shot,
             history: history,
             targetDistanceYards: targetDistanceYards,
+            metric: metric,
           );
   }
 }
@@ -121,11 +129,13 @@ class _PortraitLayout extends StatelessWidget {
     required this.shot,
     required this.history,
     required this.targetDistanceYards,
+    required this.metric,
   });
 
   final ShotDataModel shot;
   final List<ShotDataModel> history;
   final double targetDistanceYards;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
@@ -133,26 +143,27 @@ class _PortraitLayout extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _HeroCarryCard(shot: shot),
+            _RecordingBanner(),
+            _HeroCarryCard(shot: shot, metric: metric),
             const SizedBox(height: AppSpacing.sm),
-            _SecondaryGrid(shot: shot),
+            _SecondaryGrid(shot: shot, metric: metric),
             const SizedBox(height: AppSpacing.md),
-            _SectionHeader(
-              label: 'Dispersion',
-              infoText: _infoDispersion,
-            ),
+            _SectionHeader(label: 'Dispersion', infoText: _infoDispersion),
             const SizedBox(height: AppSpacing.sm),
             DispersionCanvas(
               history: history,
               targetDistanceYards: targetDistanceYards,
             ),
             const SizedBox(height: AppSpacing.sm),
-            _TargetDistanceSlider(targetDistanceYards: targetDistanceYards),
+            _TargetDistanceSlider(
+              targetDistanceYards: targetDistanceYards,
+              metric: metric,
+            ),
             if (history.length > 1) ...[
               const SizedBox(height: AppSpacing.md),
               const _SectionHeader(label: 'Recent Shots'),
               const SizedBox(height: AppSpacing.sm),
-              _RecentShotsTable(history: history),
+              _RecentShotsTable(history: history, metric: metric),
             ],
             const SizedBox(height: AppSpacing.md),
           ],
@@ -161,7 +172,7 @@ class _PortraitLayout extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Landscape (tablet / kiosk)
+// Landscape
 // ---------------------------------------------------------------------------
 
 class _LandscapeLayout extends StatelessWidget {
@@ -169,11 +180,13 @@ class _LandscapeLayout extends StatelessWidget {
     required this.shot,
     required this.history,
     required this.targetDistanceYards,
+    required this.metric,
   });
 
   final ShotDataModel shot;
   final List<ShotDataModel> history;
   final double targetDistanceYards;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -186,18 +199,20 @@ class _LandscapeLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _HeroCarryCard(shot: shot),
+                  _RecordingBanner(),
+                  _HeroCarryCard(shot: shot, metric: metric),
                   const SizedBox(height: AppSpacing.sm),
-                  _SecondaryGrid(shot: shot),
+                  _SecondaryGrid(shot: shot, metric: metric),
                   const SizedBox(height: AppSpacing.sm),
                   _TargetDistanceSlider(
                     targetDistanceYards: targetDistanceYards,
+                    metric: metric,
                   ),
                   if (history.length > 1) ...[
                     const SizedBox(height: AppSpacing.md),
                     const _SectionHeader(label: 'Recent Shots'),
                     const SizedBox(height: AppSpacing.sm),
-                    _RecentShotsTable(history: history),
+                    _RecentShotsTable(history: history, metric: metric),
                   ],
                 ],
               ),
@@ -231,14 +246,76 @@ class _LandscapeLayout extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Recording banner
+// ---------------------------------------------------------------------------
+
+class _RecordingBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) =>
+      BlocBuilder<SessionCubit, SessionState>(
+        builder: (_, state) {
+          if (state.activeSession == null) return const SizedBox.shrink();
+          return Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.12),
+              borderRadius: const BorderRadius.all(AppRadius.sm),
+              border: Border.all(
+                color: AppColors.error.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'Recording session · '
+                    '${state.activeSession!.shotCount} shots',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: AppColors.error,
+                        ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      context.read<SessionCubit>().endSession(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                  ),
+                  child: const Text('End'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+}
+
+// ---------------------------------------------------------------------------
 // Hero carry card
 // ---------------------------------------------------------------------------
 
-/// Full-width primary card with large carry number and left accent border.
 class _HeroCarryCard extends StatelessWidget {
-  const _HeroCarryCard({required this.shot});
+  const _HeroCarryCard({required this.shot, required this.metric});
 
   final ShotDataModel shot;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +335,6 @@ class _HeroCarryCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(AppRadius.md),
         child: Stack(
           children: [
-            // Ghost watermark
             Positioned(
               right: -12,
               bottom: -12,
@@ -274,11 +350,12 @@ class _HeroCarryCard extends StatelessWidget {
                 vertical: AppSpacing.md,
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
                           children: [
@@ -301,10 +378,14 @@ class _HeroCarryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
                           children: [
                             Text(
-                              shot.carryYards.toStringAsFixed(0),
+                              UnitConverter.carryValue(
+                                shot.carryYards,
+                                metric: metric,
+                              ),
                               style: theme.textTheme.displayLarge?.copyWith(
                                 color: AppColors.accent,
                                 fontFeatures: const [
@@ -313,19 +394,15 @@ class _HeroCarryCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                'yds',
-                                style: theme.textTheme.bodyMedium,
-                              ),
+                            Text(
+                              UnitConverter.carryUnit(metric: metric),
+                              style: theme.textTheme.bodyMedium,
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  // Club badge
                   _ClubBadge(clubId: shot.clubId),
                 ],
               ),
@@ -339,7 +416,6 @@ class _HeroCarryCard extends StatelessWidget {
 
 class _ClubBadge extends StatelessWidget {
   const _ClubBadge({required this.clubId});
-
   final String clubId;
 
   @override
@@ -367,15 +443,14 @@ class _ClubBadge extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Secondary metric grid — 2×3 tiles
+// Secondary grid
 // ---------------------------------------------------------------------------
 
 class _SecondaryGrid extends StatelessWidget {
-  const _SecondaryGrid({required this.shot});
+  const _SecondaryGrid({required this.shot, required this.metric});
 
   final ShotDataModel shot;
-
-  String _fmt(double v, {int decimals = 1}) => v.toStringAsFixed(decimals);
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
@@ -387,8 +462,11 @@ class _SecondaryGrid extends StatelessWidget {
             Expanded(
               child: AnimatedStatTile(
                 label: 'Ball Speed',
-                value: _fmt(shot.ballSpeedMph),
-                unit: 'mph',
+                value: UnitConverter.speedValue(
+                  shot.ballSpeedMph,
+                  metric: metric,
+                ),
+                unit: UnitConverter.speedUnit(metric: metric),
                 icon: Icons.speed_outlined,
                 infoText: _infoBallSpeed,
               ),
@@ -397,8 +475,11 @@ class _SecondaryGrid extends StatelessWidget {
             Expanded(
               child: AnimatedStatTile(
                 label: 'Club Speed',
-                value: _fmt(shot.clubSpeedMph),
-                unit: 'mph',
+                value: UnitConverter.speedValue(
+                  shot.clubSpeedMph,
+                  metric: metric,
+                ),
+                unit: UnitConverter.speedUnit(metric: metric),
                 icon: Icons.sports_golf_outlined,
                 infoText: _infoClubSpeed,
               ),
@@ -434,7 +515,7 @@ class _SecondaryGrid extends StatelessWidget {
             Expanded(
               child: AnimatedStatTile(
                 label: 'Launch V',
-                value: _fmt(shot.launchAngleV),
+                value: shot.launchAngleV.toStringAsFixed(1),
                 unit: '°',
                 icon: Icons.trending_up_outlined,
                 infoText: _infoLaunchV,
@@ -444,7 +525,7 @@ class _SecondaryGrid extends StatelessWidget {
             Expanded(
               child: AnimatedStatTile(
                 label: 'Launch H',
-                value: _fmt(shot.launchAngleH),
+                value: shot.launchAngleH.toStringAsFixed(1),
                 unit: '°',
                 icon: Icons.swap_horiz_outlined,
                 infoText: _infoLaunchH,
@@ -458,32 +539,49 @@ class _SecondaryGrid extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Target distance slider
+// Target slider
 // ---------------------------------------------------------------------------
 
 class _TargetDistanceSlider extends StatelessWidget {
-  const _TargetDistanceSlider({required this.targetDistanceYards});
+  const _TargetDistanceSlider({
+    required this.targetDistanceYards,
+    required this.metric,
+  });
 
   final double targetDistanceYards;
+  final bool metric;
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeader(
-            label: 'Target: ${targetDistanceYards.toStringAsFixed(0)} yds',
-            infoText: _infoTarget,
+  Widget build(BuildContext context) {
+    final display = UnitConverter.targetDisplay(
+      targetDistanceYards,
+      metric: metric,
+    );
+    final unit = UnitConverter.targetUnit(metric: metric);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(
+          label: 'Target: ${display.toStringAsFixed(0)} $unit',
+          infoText: _infoTarget,
+        ),
+        Slider(
+          value: display.clamp(
+            UnitConverter.targetMin(metric: metric),
+            UnitConverter.targetMax(metric: metric),
           ),
-          Slider(
-            value: targetDistanceYards.clamp(50.0, 300.0),
-            min: 50,
-            max: 300,
-            divisions: 50,
-            onChanged: (v) =>
-                context.read<TargetDistanceCubit>().setDistance(v),
-          ),
-        ],
-      );
+          min: UnitConverter.targetMin(metric: metric),
+          max: UnitConverter.targetMax(metric: metric),
+          divisions: 50,
+          onChanged: (v) {
+            final yards =
+                UnitConverter.targetToYards(v, metric: metric);
+            context.read<TargetDistanceCubit>().setDistance(yards);
+          },
+        ),
+      ],
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -491,15 +589,17 @@ class _TargetDistanceSlider extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _RecentShotsTable extends StatelessWidget {
-  const _RecentShotsTable({required this.history});
+  const _RecentShotsTable({required this.history, required this.metric});
 
   final List<ShotDataModel> history;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Show at most the last 8 shots, newest first
     final shots = history.take(8).toList();
+    final speedUnit = UnitConverter.speedUnit(metric: metric);
+    final carryUnit = UnitConverter.carryUnit(metric: metric);
 
     return Container(
       decoration: const BoxDecoration(
@@ -511,7 +611,6 @@ class _RecentShotsTable extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header row
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -521,21 +620,18 @@ class _RecentShotsTable extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 36,
-                  child: Text(
-                    'CLB',
-                    style: theme.textTheme.labelSmall,
-                  ),
+                  child: Text('CLB', style: theme.textTheme.labelSmall),
                 ),
                 Expanded(
                   child: Text(
-                    'CARRY',
+                    'CARRY ($carryUnit)',
                     style: theme.textTheme.labelSmall,
                     textAlign: TextAlign.right,
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    'BALL',
+                    'BALL ($speedUnit)',
                     style: theme.textTheme.labelSmall,
                     textAlign: TextAlign.right,
                   ),
@@ -574,31 +670,14 @@ class _RecentShotsTable extends StatelessWidget {
                     children: [
                       SizedBox(
                         width: 36,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: 0.12),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(4),
-                            ),
-                          ),
-                          child: Text(
-                            s.clubId,
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                        child: _MiniClubBadge(clubId: s.clubId),
                       ),
                       Expanded(
                         child: Text(
-                          '${s.carryYards.toStringAsFixed(0)} yds',
+                          UnitConverter.carryValue(
+                            s.carryYards,
+                            metric: metric,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppColors.onSurface,
                             fontFeatures: const [
@@ -610,7 +689,10 @@ class _RecentShotsTable extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          '${s.ballSpeedMph.toStringAsFixed(1)}',
+                          UnitConverter.speedValue(
+                            s.ballSpeedMph,
+                            metric: metric,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppColors.onSurface,
                             fontFeatures: const [
@@ -662,8 +744,31 @@ class _RecentShotsTable extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Section header
+// Shared small widgets
 // ---------------------------------------------------------------------------
+
+class _MiniClubBadge extends StatelessWidget {
+  const _MiniClubBadge({required this.clubId});
+  final String clubId;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.12),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
+        ),
+        child: Text(
+          clubId,
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: AppColors.accent,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+}
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label, this.infoText});

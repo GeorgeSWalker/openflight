@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:openflight_mobile/bloc/settings/settings_cubit.dart';
 import 'package:openflight_mobile/bloc/shot/shot_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
 import 'package:openflight_mobile/core/models/shot_data_model.dart';
+import 'package:openflight_mobile/core/utils/unit_converter.dart';
 
 /// Club comparison screen — groups shot history by club and shows per-club
 /// averages for carry, ball speed, spin, and smash factor.
@@ -13,14 +15,15 @@ class CompareScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      BlocBuilder<ShotCubit, ShotState>(
-        builder: (context, state) {
-          if (state.history.isEmpty) {
-            return const _EmptyState();
-          }
-          final groups = _groupByClub(state.history);
-          return _CompareLayout(groups: groups);
-        },
+      BlocBuilder<SettingsCubit, SettingsState>(
+        builder: (context, settings) =>
+            BlocBuilder<ShotCubit, ShotState>(
+          builder: (context, state) {
+            if (state.history.isEmpty) return const _EmptyState();
+            final groups = _groupByClub(state.history);
+            return _CompareLayout(groups: groups, metric: settings.metric);
+          },
+        ),
       );
 
   static Map<String, _ClubStats> _groupByClub(List<ShotDataModel> shots) {
@@ -87,13 +90,13 @@ class _ClubStats {
 // ---------------------------------------------------------------------------
 
 class _CompareLayout extends StatelessWidget {
-  const _CompareLayout({required this.groups});
+  const _CompareLayout({required this.groups, required this.metric});
 
   final Map<String, _ClubStats> groups;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
-    // Sort by avg carry descending
     final sorted = groups.values.toList()
       ..sort((a, b) => b.avgCarry.compareTo(a.avgCarry));
 
@@ -104,10 +107,10 @@ class _CompareLayout extends StatelessWidget {
         children: [
           _SummaryHeader(count: sorted.length),
           const SizedBox(height: AppSpacing.md),
-          // Best club highlight
-          if (sorted.isNotEmpty) _BestClubCard(stats: sorted.first),
+          if (sorted.isNotEmpty)
+            _BestClubCard(stats: sorted.first, metric: metric),
           const SizedBox(height: AppSpacing.md),
-          _ClubTable(clubs: sorted),
+          _ClubTable(clubs: sorted, metric: metric),
           const SizedBox(height: AppSpacing.md),
         ],
       ),
@@ -132,9 +135,10 @@ class _SummaryHeader extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _BestClubCard extends StatelessWidget {
-  const _BestClubCard({required this.stats});
+  const _BestClubCard({required this.stats, required this.metric});
 
   final _ClubStats stats;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +185,10 @@ class _BestClubCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              stats.avgCarry.toStringAsFixed(0),
+                              UnitConverter.carryValue(
+                                stats.avgCarry,
+                                metric: metric,
+                              ),
                               style: theme.textTheme.displayLarge?.copyWith(
                                 color: AppColors.accent,
                                 fontFeatures: const [
@@ -193,14 +200,14 @@ class _BestClubCard extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                'yds avg',
+                                '${UnitConverter.carryUnit(metric: metric)} avg',
                                 style: theme.textTheme.bodyMedium,
                               ),
                             ),
                           ],
                         ),
                         Text(
-                          'Max ${stats.maxCarry.toStringAsFixed(0)} yds · '
+                          'Max ${UnitConverter.carry(stats.maxCarry, metric: metric)} · '
                           '${stats.shotCount} shot${stats.shotCount == 1 ? '' : 's'}',
                           style: theme.textTheme.bodySmall,
                         ),
@@ -243,9 +250,10 @@ class _BestClubCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _ClubTable extends StatelessWidget {
-  const _ClubTable({required this.clubs});
+  const _ClubTable({required this.clubs, required this.metric});
 
   final List<_ClubStats> clubs;
+  final bool metric;
 
   @override
   Widget build(BuildContext context) {
@@ -274,21 +282,21 @@ class _ClubTable extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    'AVG CARRY',
+                    'AVG (${UnitConverter.carryUnit(metric: metric)})',
                     style: theme.textTheme.labelSmall,
                     textAlign: TextAlign.right,
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    'MAX',
+                    'MAX (${UnitConverter.carryUnit(metric: metric)})',
                     style: theme.textTheme.labelSmall,
                     textAlign: TextAlign.right,
                   ),
                 ),
                 Expanded(
                   child: Text(
-                    'BALL SPD',
+                    UnitConverter.speedUnit(metric: metric).toUpperCase(),
                     style: theme.textTheme.labelSmall,
                     textAlign: TextAlign.right,
                   ),
@@ -350,7 +358,10 @@ class _ClubTable extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          '${s.avgCarry.toStringAsFixed(0)} yds',
+                          UnitConverter.carryValue(
+                            s.avgCarry,
+                            metric: metric,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: AppColors.onSurface,
                             fontFeatures: const [
@@ -362,7 +373,10 @@ class _ClubTable extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          '${s.maxCarry.toStringAsFixed(0)}',
+                          UnitConverter.carryValue(
+                            s.maxCarry,
+                            metric: metric,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontFeatures: const [
                               FontFeature.tabularFigures(),
@@ -373,7 +387,10 @@ class _ClubTable extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          '${s.avgBallSpeed.toStringAsFixed(1)}',
+                          UnitConverter.speedValue(
+                            s.avgBallSpeed,
+                            metric: metric,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontFeatures: const [
                               FontFeature.tabularFigures(),

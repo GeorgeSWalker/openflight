@@ -3,13 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:openflight_mobile/bloc/connection/connection_cubit.dart';
+import 'package:openflight_mobile/bloc/settings/settings_cubit.dart';
 import 'package:openflight_mobile/core/constants/theme.dart';
 import 'package:openflight_mobile/core/models/connection_state_model.dart';
 
-/// Device / connection settings screen.
+/// Device & settings screen.
 ///
-/// Lets the user configure the Raspberry Pi host and gRPC port, shows
-/// live connection status, and provides connect / disconnect actions.
+/// Shows live connection status, connection form, unit preferences,
+/// and hardware info.
 class DeviceScreen extends StatelessWidget {
   const DeviceScreen({super.key});
 
@@ -24,6 +25,8 @@ class DeviceScreen extends StatelessWidget {
               _StatusCard(state: state),
               const SizedBox(height: AppSpacing.md),
               const _ConnectionForm(),
+              const SizedBox(height: AppSpacing.md),
+              const _PreferencesCard(),
               const SizedBox(height: AppSpacing.md),
               _DeviceInfoCard(state: state),
             ],
@@ -84,21 +87,7 @@ class _StatusCard extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: statusColor.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                      ),
+                      _GlowDot(color: statusColor),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         statusLabel,
@@ -119,11 +108,23 @@ class _StatusCard extends StatelessWidget {
                   ],
                   if (state.lastError != null) ...[
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      state.lastError!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.error,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          size: 13,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            state.lastError!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],
@@ -134,6 +135,28 @@ class _StatusCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _GlowDot extends StatelessWidget {
+  const _GlowDot({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.4),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -181,8 +204,9 @@ class _ConnectionFormState extends State<_ConnectionForm> {
               TextField(
                 controller: _hostController,
                 style: const TextStyle(color: AppColors.onSurface),
-                decoration:
-                    const InputDecoration(labelText: 'Raspberry Pi IP Address'),
+                decoration: const InputDecoration(
+                  labelText: 'Raspberry Pi IP Address',
+                ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 enabled: !state.isConnected,
@@ -191,42 +215,46 @@ class _ConnectionFormState extends State<_ConnectionForm> {
               TextField(
                 controller: _portController,
                 style: const TextStyle(color: AppColors.onSurface),
-                decoration: const InputDecoration(labelText: 'gRPC Port'),
+                decoration:
+                    const InputDecoration(labelText: 'gRPC Port'),
                 keyboardType: TextInputType.number,
                 enabled: !state.isConnected,
               ),
               const SizedBox(height: AppSpacing.md),
-              state.isConnected
-                  ? OutlinedButton.icon(
-                      onPressed: _disconnect,
-                      icon: const Icon(Icons.link_off, size: 18),
-                      label: const Text('Disconnect'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: BorderSide(
-                          color: AppColors.error.withValues(alpha: 0.6),
-                        ),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                      ),
-                    )
-                  : FilledButton.icon(
-                      onPressed: state.status == ConnectionStatus.connecting
-                          ? null
-                          : _connect,
-                      icon: const Icon(Icons.link, size: 18),
-                      label: Text(
-                        state.status == ConnectionStatus.connecting
-                            ? 'Connecting…'
-                            : 'Connect',
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.onAccent,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                      ),
+              if (state.isConnected)
+                OutlinedButton.icon(
+                  onPressed: _disconnect,
+                  icon: const Icon(Icons.link_off, size: 18),
+                  label: const Text('Disconnect'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: BorderSide(
+                      color: AppColors.error.withValues(alpha: 0.6),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
+                  ),
+                )
+              else
+                FilledButton.icon(
+                  onPressed: state.status == ConnectionStatus.connecting
+                      ? null
+                      : _connect,
+                  icon: const Icon(Icons.link, size: 18),
+                  label: Text(
+                    state.status == ConnectionStatus.connecting
+                        ? 'Connecting…'
+                        : 'Connect',
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.onAccent,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -239,13 +267,137 @@ class _ConnectionFormState extends State<_ConnectionForm> {
     await context.read<ConnectionCubit>().connect(host: host, port: port);
   }
 
-  Future<void> _disconnect() async {
-    await context.read<ConnectionCubit>().disconnect();
-  }
+  Future<void> _disconnect() async =>
+      context.read<ConnectionCubit>().disconnect();
 }
 
 // ---------------------------------------------------------------------------
-// Device info card — system info
+// Preferences card — units toggle
+// ---------------------------------------------------------------------------
+
+class _PreferencesCard extends StatelessWidget {
+  const _PreferencesCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.all(AppRadius.md),
+        border: Border.fromBorderSide(
+          BorderSide(color: AppColors.outlineVariant),
+        ),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('PREFERENCES', style: theme.textTheme.labelSmall),
+          const SizedBox(height: AppSpacing.md),
+          BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (context, settings) => Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Units',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      Text(
+                        settings.metric
+                            ? 'Metric — metres, kph'
+                            : 'Imperial — yards, mph',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                _UnitsToggle(metric: settings.metric),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnitsToggle extends StatelessWidget {
+  const _UnitsToggle({required this.metric});
+  final bool metric;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHigh,
+          borderRadius: const BorderRadius.all(AppRadius.sm),
+          border: const Border.fromBorderSide(
+            BorderSide(color: AppColors.outlineVariant),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ToggleButton(
+              label: 'yds',
+              selected: !metric,
+              onTap: () => context
+                  .read<SettingsCubit>()
+                  .setMetric(value: false),
+            ),
+            _ToggleButton(
+              label: 'm',
+              selected: metric,
+              onTap: () => context
+                  .read<SettingsCubit>()
+                  .setMetric(value: true),
+            ),
+          ],
+        ),
+      );
+}
+
+class _ToggleButton extends StatelessWidget {
+  const _ToggleButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.accent : Colors.transparent,
+            borderRadius: const BorderRadius.all(AppRadius.sm),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: selected ? AppColors.onAccent : AppColors.onSurfaceMuted,
+            ),
+          ),
+        ),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Device info card
 // ---------------------------------------------------------------------------
 
 class _DeviceInfoCard extends StatelessWidget {
@@ -270,13 +422,13 @@ class _DeviceInfoCard extends StatelessWidget {
         children: [
           Text('ABOUT', style: theme.textTheme.labelSmall),
           const SizedBox(height: AppSpacing.md),
-          _InfoRow(label: 'Sensor', value: 'OPS243-A Doppler Radar'),
+          const _InfoRow(label: 'Sensor', value: 'OPS243-A Doppler Radar'),
           const Divider(height: AppSpacing.lg, color: AppColors.divider),
-          _InfoRow(label: 'Protocol', value: 'gRPC / Protobuf'),
+          const _InfoRow(label: 'Protocol', value: 'gRPC / Protobuf'),
           const Divider(height: AppSpacing.lg, color: AppColors.divider),
-          _InfoRow(label: 'App Version', value: '1.0.0'),
+          const _InfoRow(label: 'App Version', value: '1.0.0'),
           const Divider(height: AppSpacing.lg, color: AppColors.divider),
-          _InfoRow(
+          const _InfoRow(
             label: 'Detection',
             value: 'FFT + 2D CFAR (SNR > 15 dB)',
           ),
@@ -301,9 +453,8 @@ class _InfoRow extends StatelessWidget {
         Text(label, style: theme.textTheme.bodyMedium),
         Text(
           value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: AppColors.onSurface,
-          ),
+          style:
+              theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurface),
         ),
       ],
     );
