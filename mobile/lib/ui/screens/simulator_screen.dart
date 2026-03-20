@@ -39,7 +39,7 @@ class _SimulatorScreenState extends State<SimulatorScreen> {
     _unityController = controller;
   }
 
-  void _onUnityMessage(UnityWidgetController controller, String message) {
+  void _onUnityMessage(UnityWidgetController controller, String? message) {
     if (message == 'ready') setState(() => _unityReady = true);
   }
 
@@ -161,15 +161,18 @@ class _ShotStrip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _MiniStat(
-                label: 'Carry',
-                value: '${shot.carryYards.toStringAsFixed(0)} yds'),
+              label: 'Carry',
+              value: '${shot.carryYards.toStringAsFixed(0)} yds',
+            ),
             _MiniStat(
-                label: 'Ball',
-                value: '${shot.ballSpeedMph.toStringAsFixed(1)} mph'),
+              label: 'Ball',
+              value: '${shot.ballSpeedMph.toStringAsFixed(1)} mph',
+            ),
             _MiniStat(label: 'Spin', value: '${shot.spinRpm} rpm'),
             _MiniStat(
-                label: 'Launch',
-                value: '${shot.launchAngleV.toStringAsFixed(1)}°'),
+              label: 'Launch',
+              value: '${shot.launchAngleV.toStringAsFixed(1)}°',
+            ),
           ],
         ),
       );

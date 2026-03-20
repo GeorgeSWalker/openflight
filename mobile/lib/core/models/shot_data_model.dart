@@ -87,6 +87,7 @@ class ShotDataModel extends Equatable {
     int spinRpm = 2450,
     double carryYards = 248.0,
     String clubId = 'DR',
+    int? timestamp,
   }) =>
       ShotDataModel(
         ballSpeedMph: ballSpeedMph,
@@ -96,7 +97,7 @@ class ShotDataModel extends Equatable {
         spinRpm: spinRpm,
         carryYards: carryYards,
         clubId: clubId,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
+        timestamp: timestamp ?? DateTime.now().millisecondsSinceEpoch,
       );
 
   @override

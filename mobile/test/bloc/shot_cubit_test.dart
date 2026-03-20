@@ -78,7 +78,7 @@ void main() {
       final cubit = ShotCubit(fastClient);
       await fastClient.connect(host: 'mock');
       await Future<void>.delayed(
-        Duration(milliseconds: ShotCubit.kMaxHistory * 12 + 50),
+        const Duration(milliseconds: ShotCubit.kMaxHistory * 12 + 50),
       );
       expect(cubit.state.history.length, lessThanOrEqualTo(ShotCubit.kMaxHistory));
       await cubit.close();

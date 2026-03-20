@@ -5,7 +5,7 @@ import 'package:grpc/grpc.dart';
 import 'package:openflight_mobile/core/models/connection_state_model.dart';
 import 'package:openflight_mobile/core/models/shot_data_model.dart';
 import 'package:openflight_mobile/proto/openflight.pb.dart';
-import 'package:openflight_mobile/proto/openflight.pbgrpc.dart';
+import 'package:openflight_mobile/proto/openflight.pbgrpc.dart' as pbgrpc;
 
 /// Default gRPC port for the OpenFlight Pi server.
 const kDefaultGrpcPort = 50051;
@@ -28,7 +28,7 @@ class LaunchMonitorClient {
   LaunchMonitorClient();
 
   ClientChannel? _channel;
-  LaunchMonitorClient? _stub;
+  pbgrpc.LaunchMonitorClient? _stub;
 
   final _shotController = StreamController<ShotDataModel>.broadcast();
   final _stateController =
@@ -61,12 +61,14 @@ class LaunchMonitorClient {
     if (_disposed) return;
     await _teardown();
 
-    _updateState(_state.copyWith(
-      status: ConnectionStatus.connecting,
-      host: host,
-      port: port,
-      lastError: null,
-    ));
+    _updateState(
+      _state.copyWith(
+        status: ConnectionStatus.connecting,
+        host: host,
+        port: port,
+        lastError: null,
+      ),
+    );
 
     _channel = ClientChannel(
       host,
@@ -76,7 +78,7 @@ class LaunchMonitorClient {
         idleTimeout: Duration(minutes: 5),
       ),
     );
-    _stub = LaunchMonitorClient(_channel!);
+    _stub = pbgrpc.LaunchMonitorClient(_channel!);
 
     try {
       await _ping(host: host, port: port);
@@ -138,13 +140,15 @@ class LaunchMonitorClient {
     );
     sw.stop();
 
-    _updateState(_state.copyWith(
-      status: ConnectionStatus.connected,
-      host: host,
-      port: port,
-      lastPingMs: sw.elapsedMilliseconds,
-      lastError: null,
-    ));
+    _updateState(
+      _state.copyWith(
+        status: ConnectionStatus.connected,
+        host: host,
+        port: port,
+        lastPingMs: sw.elapsedMilliseconds,
+        lastError: null,
+      ),
+    );
   }
 
   void _startShotStream() {
@@ -193,11 +197,13 @@ class LaunchMonitorClient {
         );
         sw.stop();
         if (_state.isConnected || _state.isConnecting) {
-          _updateState(_state.copyWith(
-            status: ConnectionStatus.connected,
-            lastPingMs: sw.elapsedMilliseconds,
-            lastError: null,
-          ));
+          _updateState(
+            _state.copyWith(
+              status: ConnectionStatus.connected,
+              lastPingMs: sw.elapsedMilliseconds,
+              lastError: null,
+            ),
+          );
         }
       } on GrpcError catch (e) {
         _handleError(e.message ?? e.toString());
@@ -206,10 +212,12 @@ class LaunchMonitorClient {
   }
 
   void _handleError(String message) {
-    _updateState(_state.copyWith(
-      status: ConnectionStatus.error,
-      lastError: message,
-    ));
+    _updateState(
+      _state.copyWith(
+        status: ConnectionStatus.error,
+        lastError: message,
+      ),
+    );
     // Re-attempt connection after delay.
     Future.delayed(_kReconnectDelay, () {
       if (!_disposed && _state.status == ConnectionStatus.error) {
@@ -304,21 +312,25 @@ class MockLaunchMonitorClient extends LaunchMonitorClient {
     required String host,
     int port = kDefaultGrpcPort,
   }) async {
-    _updateStateMock(ConnectionStateModel(
-      status: ConnectionStatus.connecting,
-      host: host,
-      port: port,
-    ));
+    _updateStateMock(
+      ConnectionStateModel(
+        status: ConnectionStatus.connecting,
+        host: host,
+        port: port,
+      ),
+    );
 
     // Simulate connection delay.
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
-    _updateStateMock(ConnectionStateModel(
-      status: ConnectionStatus.connected,
-      host: host,
-      port: port,
-      lastPingMs: 4,
-    ));
+    _updateStateMock(
+      ConnectionStateModel(
+        status: ConnectionStatus.connected,
+        host: host,
+        port: port,
+        lastPingMs: 4,
+      ),
+    );
 
     _startMockStream();
   }
