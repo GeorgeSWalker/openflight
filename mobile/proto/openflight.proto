@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package openflight;
+
+option java_multiple_files = true;
+option java_package = "com.openflight.proto";
+
+service LaunchMonitor {
+  // Stream of shots pushed from the Pi to the App
+  rpc StreamShots (Empty) returns (stream ShotData);
+  // Send configuration changes (e.g., changing club type)
+  rpc UpdateConfig (UserConfig) returns (ConfigResponse);
+  // Health check / heartbeat
+  rpc Ping (Empty) returns (PingResponse);
+}
+
+message Empty {}
+
+message ShotData {
+  float ball_speed_mph = 1;
+  float club_speed_mph = 2;
+  float launch_angle_v = 3;
+  float launch_angle_h = 4;
+  int32 spin_rpm = 5;
+  float carry_yards = 6;
+  string club_id = 7;
+  int64 timestamp = 8;
+}
+
+message UserConfig {
+  string current_club = 1;    // e.g., "7I", "DR"
+  float target_distance_yards = 2;
+}
+
+message ConfigResponse {
+  bool success = 1;
+}
+
+message PingResponse {
+  int64 server_time = 1;
+}
